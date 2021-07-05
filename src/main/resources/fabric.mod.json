@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "discord-bridge",
+  "version": "${version}",
+
+  "name": "Discord Bridge",
+  "description": "Provides a bridge between Discord and Minecraft.",
+  "authors": [
+    "Selicre"
+  ],
+  "contact": {
+    "homepage": "https://selic.re/",
+    "sources": "https://github.com/Selicre/mc-discord-bridge"
+  },
+
+  "license": "MIT",
+  "icon": "assets/discord-bridge/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "selic.re.discordbridge.DiscordBridgeMod"
+    ]
+  },
+  "mixins": [
+    "discord-bridge.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.17.x",
+    "java": ">=16"
+  }
+}

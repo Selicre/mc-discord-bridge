@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "selic.re.discordbridge.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "BroadcastHandlerMixin",
+    "NetworkHandlerMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
