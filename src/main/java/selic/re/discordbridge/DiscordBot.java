@@ -13,7 +13,9 @@ import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import org.apache.logging.log4j.LogManager;
 
+import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 import java.util.UUID;
 
@@ -25,6 +27,7 @@ public class DiscordBot extends ListenerAdapter {
     public static void init(Config config, MinecraftServer server) throws LoginException {
         INSTANCE = new DiscordBot(config, server);
     }
+    @Nullable
     public static DiscordBot getInstance() {
         return INSTANCE;
     }
@@ -58,7 +61,8 @@ public class DiscordBot extends ListenerAdapter {
             this.broadcastNoMirror(server.getPlayerManager(), text);
         }
     }
-    public void broadcastNoMirror(PlayerManager pm, Text message) {
+    // This method is a reimplementation of broadcastChatMessage that will not mirror to discord.
+    private void broadcastNoMirror(PlayerManager pm, Text message) {
         MessageType type = MessageType.CHAT;
         UUID sender = new UUID(0, 0);
 
@@ -73,14 +77,17 @@ public class DiscordBot extends ListenerAdapter {
         TextChannel ch = this.jda.getTextChannelById(config.channel_id);
         if (ch != null) {
             ch.sendMessage("<" + player + "> " + msg).queue();
+        } else {
+            LogManager.getLogger().error("Could not find text channel to mirror the message to");
         }
     }
 
     public void sendSystemMessage(String string) {
-        // 298715981654786051
         TextChannel ch = this.jda.getTextChannelById(config.channel_id);
         if (ch != null) {
             ch.sendMessage(string).queue();
+        } else {
+            LogManager.getLogger().error("Could not find text channel to mirror the message to");
         }
     }
 }

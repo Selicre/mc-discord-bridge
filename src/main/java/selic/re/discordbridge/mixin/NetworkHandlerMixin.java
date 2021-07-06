@@ -19,7 +19,10 @@ public abstract class NetworkHandlerMixin {
 		String msg = message.getRaw();
 		if (!msg.startsWith("/")) {
 			String player = this.getPlayer().getDisplayName().asString();
-			DiscordBot.getInstance().sendChatMessage(player, msg);
+			var db = DiscordBot.getInstance();
+			if (db != null) {
+				db.sendChatMessage(player, msg);
+			}
 		}
 	}
 }
