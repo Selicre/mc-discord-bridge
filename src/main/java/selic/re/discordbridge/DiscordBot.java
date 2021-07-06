@@ -48,6 +48,9 @@ public class DiscordBot extends ListenerAdapter {
             StringBuilder sb = new StringBuilder();
             sb.append("<@");
             sb.append(msg.getAuthor().getName());
+            if (msg.getReferencedMessage() != null) {
+                sb.append(" ⏶");
+            }
             sb.append("> ");
             sb.append(msg.getContentStripped());
 

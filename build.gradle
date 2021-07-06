@@ -38,7 +38,11 @@ dependencies {
 	implementation("net.dv8tion:JDA:4.3.0_293") {
 		exclude module: 'opus-java'
 	}
+
+	modApi "net.dv8tion:JDA:4.3.0_293"
+	include "net.dv8tion:JDA:4.3.0_293"
 }
+
 
 processResources {
 	inputs.property "version", project.version
