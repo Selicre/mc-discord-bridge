@@ -1,9 +1,12 @@
 package selic.re.discordbridge;
 
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.WebhookClientBuilder;
+import club.minnced.discord.webhook.send.WebhookMessageBuilder;
+import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -13,7 +16,6 @@ import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
@@ -21,12 +23,15 @@ import java.util.UUID;
 
 public class DiscordBot extends ListenerAdapter {
     static DiscordBot INSTANCE;
-    private final JDA jda;
+
+    private final WebhookClient webhook;
     MinecraftServer server;
     Config config;
+
     public static void init(Config config, MinecraftServer server) throws LoginException {
         INSTANCE = new DiscordBot(config, server);
     }
+
     @Nullable
     public static DiscordBot getInstance() {
         return INSTANCE;
@@ -34,11 +39,11 @@ public class DiscordBot extends ListenerAdapter {
     DiscordBot(Config config, MinecraftServer server) throws LoginException {
         this.server = server;
         this.config = config;
-        this.jda = JDABuilder.createLight(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
-                .addEventListeners(this)
-                .build();
+        JDABuilder.createLight(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
+            .addEventListeners(this)
+            .build();
+        this.webhook = new WebhookClientBuilder(config.webhook_url).build();
     }
-
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
@@ -76,21 +81,17 @@ public class DiscordBot extends ListenerAdapter {
         }
     }
 
-    public void sendChatMessage(String player, String msg) {
-        TextChannel ch = this.jda.getTextChannelById(config.channel_id);
-        if (ch != null) {
-            ch.sendMessage("<" + player + "> " + msg).queue();
-        } else {
-            LogManager.getLogger().error("Could not find text channel to mirror the message to");
-        }
+    public void sendChatMessage(GameProfile player, String msg) {
+        webhook.send(startWebhook(player).setContent(msg).build());
     }
 
     public void sendSystemMessage(String string) {
-        TextChannel ch = this.jda.getTextChannelById(config.channel_id);
-        if (ch != null) {
-            ch.sendMessage(string).queue();
-        } else {
-            LogManager.getLogger().error("Could not find text channel to mirror the message to");
-        }
+        webhook.send(new WebhookMessageBuilder().setContent(string).build());
+    }
+
+    protected WebhookMessageBuilder startWebhook(GameProfile player) {
+        String avatar = "https://crafatar.com/renders/head/" + player.getId().toString() + "?overlay";
+
+        return new WebhookMessageBuilder().setUsername(player.getName()).setAvatarUrl(avatar);
     }
 }

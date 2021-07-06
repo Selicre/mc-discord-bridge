@@ -1,5 +1,6 @@
 package selic.re.discordbridge.mixin;
 
+import com.mojang.authlib.GameProfile;
 import net.minecraft.server.filter.TextStream;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -18,7 +19,7 @@ public abstract class NetworkHandlerMixin {
 	public void preMessage(TextStream.Message message, CallbackInfo info) {
 		String msg = message.getRaw();
 		if (!msg.startsWith("/")) {
-			String player = this.getPlayer().getDisplayName().asString();
+			GameProfile player = this.getPlayer().getGameProfile();
 			var db = DiscordBot.getInstance();
 			if (db != null) {
 				db.sendChatMessage(player, msg);

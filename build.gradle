@@ -35,12 +35,14 @@ dependencies {
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
 
+	include "net.dv8tion:JDA:4.3.0_293"
 	implementation("net.dv8tion:JDA:4.3.0_293") {
 		exclude module: 'opus-java'
 	}
 
+	include "club.minnced:discord-webhooks:0.5.7"
+	implementation("club.minnced:discord-webhooks:0.5.7")
 
-	include "net.dv8tion:JDA:4.3.0_293"
 	include "com.neovisionaries:nv-websocket-client:2.14"
 	include "com.squareup.okhttp3:okhttp:3.13.0"
 	include "com.squareup.okio:okio:1.17.2"
