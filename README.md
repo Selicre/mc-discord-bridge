@@ -1,9 +1,16 @@
-# Fabric Example Mod
+# Minecraft-Discord bridge
 
-## Setup
+Simple fabric mod that allows you to bridge together minecraft and discord. Doesn't require anything except fabric itself.
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
+## Config
 
-## License
+The config goes in `config/discord-bridge.json` and contains these keys:
 
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+```
+{
+  "token": "insert-bot-token-here",
+  "channel_id": 123123123123123
+}
+```
+
+Replace the `token` field with the token of your bot and `channel_id` field with the ID of the channel you want to mirror the chat to.
