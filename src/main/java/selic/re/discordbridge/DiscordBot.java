@@ -4,7 +4,6 @@ import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookClientBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.mojang.authlib.GameProfile;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -14,12 +13,18 @@ import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
 import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 import java.util.UUID;
+
+import static selic.re.discordbridge.DiscordFormattingConverter.discordUserToMinecraft;
+import static selic.re.discordbridge.DiscordFormattingConverter.discordMessageToMinecraft;
 
 public class DiscordBot extends ListenerAdapter {
     static DiscordBot INSTANCE;
@@ -39,7 +44,7 @@ public class DiscordBot extends ListenerAdapter {
     DiscordBot(Config config, MinecraftServer server) throws LoginException {
         this.server = server;
         this.config = config;
-        JDABuilder.createLight(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
+        JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS)
             .addEventListeners(this)
             .build();
         this.webhook = new WebhookClientBuilder(config.webhook_url).build();
@@ -50,25 +55,45 @@ public class DiscordBot extends ListenerAdapter {
     {
         if (event.getChannel().getIdLong() == config.channel_id && !event.getAuthor().isBot()) {
             Message msg = event.getMessage();
-            StringBuilder sb = new StringBuilder();
-            sb.append("<@");
-            sb.append(msg.getAuthor().getName());
+            LiteralText root = new LiteralText("");
+
+            root.append("<");
+            root.append(discordUserToMinecraft(msg.getAuthor(), msg.getGuild()));
+
             if (msg.getReferencedMessage() != null) {
-                sb.append(" ⏶");
+                root.append(" -> ");
+                root.append(discordUserToMinecraft(msg.getReferencedMessage().getAuthor(), msg.getGuild()));
             }
-            sb.append("> ");
-            sb.append(msg.getContentStripped());
+
+            root.append(">");
+
+            if (!msg.getContentRaw().isEmpty()) {
+                root.append(" ");
+                root.append(discordMessageToMinecraft(msg));
+            }
 
             if (!msg.getAttachments().isEmpty()) {
-                if (msg.getContentStripped().length() != 0) {
-                    sb.append(" ");
+                for (Message.Attachment attachment : msg.getAttachments()) {
+                    root.append(" [");
+                    LiteralText text;
+                    if (attachment.isImage()) {
+                        text = new LiteralText("image");
+                    } else if (attachment.isVideo()) {
+                        text = new LiteralText("video");
+                    } else {
+                        text = new LiteralText("attachment");
+                    }
+                    ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
+                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(attachment.getFileName() + "\n" + (attachment.getSize() / 1000) + " kb"));
+                    text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
+                    root.append(text);
+                    root.append("]");
                 }
-                sb.append("[attachment]");
             }
-            Text text = new LiteralText(sb.toString());
-            this.broadcastNoMirror(server.getPlayerManager(), text);
+            this.broadcastNoMirror(server.getPlayerManager(), root);
         }
     }
+
     // This method is a reimplementation of broadcastChatMessage that will not mirror to discord.
     private void broadcastNoMirror(PlayerManager pm, Text message) {
         MessageType type = MessageType.CHAT;
