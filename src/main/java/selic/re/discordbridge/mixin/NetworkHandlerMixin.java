@@ -24,6 +24,16 @@ public abstract class NetworkHandlerMixin {
 			if (db != null) {
 				db.sendChatMessage(player, msg);
 			}
+		} else if (msg.startsWith("/me ")) {
+			// The reason why this has to be handled individually is because in this particular instance,
+			// the broadcast() method is used; this relies on internal behaviour and should probably
+			// be changed to match the translatable string rather than hijacking this particular class.
+			// That said, it works. For now.
+			GameProfile player = this.getPlayer().getGameProfile();
+			var db = DiscordBot.getInstance();
+			if (db != null) {
+				db.sendEmoteMessage(player, msg.substring(4));
+			}
 		}
 	}
 }

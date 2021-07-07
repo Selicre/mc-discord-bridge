@@ -45,7 +45,7 @@ public class DiscordBot extends ListenerAdapter {
     DiscordBot(Config config, MinecraftServer server) throws LoginException {
         this.server = server;
         this.config = config;
-        JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS)
+        JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES)
             .addEventListeners(this)
             .build();
         this.webhook = new WebhookClientBuilder(config.webhook_url).build();
@@ -109,6 +109,10 @@ public class DiscordBot extends ListenerAdapter {
 
     public void sendChatMessage(GameProfile player, String msg) {
         webhook.send(startWebhook(player).setContent(msg).build());
+    }
+
+    public void sendEmoteMessage(GameProfile player, String msg) {
+        webhook.send(startWebhook(player).setContent("*" + msg + "*").build());
     }
 
     public void sendSystemMessage(Text text) {
