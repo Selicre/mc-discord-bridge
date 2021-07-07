@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import static selic.re.discordbridge.DiscordFormattingConverter.discordUserToMinecraft;
 import static selic.re.discordbridge.DiscordFormattingConverter.discordMessageToMinecraft;
+import static selic.re.discordbridge.DiscordFormattingConverter.minecraftToDiscord;
 
 public class DiscordBot extends ListenerAdapter {
     static DiscordBot INSTANCE;
@@ -110,8 +111,8 @@ public class DiscordBot extends ListenerAdapter {
         webhook.send(startWebhook(player).setContent(msg).build());
     }
 
-    public void sendSystemMessage(String string) {
-        webhook.send(new WebhookMessageBuilder().setContent(string).build());
+    public void sendSystemMessage(Text text) {
+        webhook.send(new WebhookMessageBuilder().setContent(minecraftToDiscord(text)).build());
     }
 
     protected WebhookMessageBuilder startWebhook(GameProfile player) {

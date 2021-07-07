@@ -225,6 +225,12 @@ public class DiscordFormattingConverter {
         return author;
     }
 
+    public static String minecraftToDiscord(Text root) {
+        TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
+        root.visit(visitor, Style.EMPTY);
+        return visitor.get();
+    }
+
     protected enum Formatting {
         Root(style -> style),
         Bold(style -> style.withBold(true), "**"),

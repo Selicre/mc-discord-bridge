@@ -17,7 +17,7 @@ public class BroadcastHandlerMixin {
     public void preBroadcastChatMessage(Text message, MessageType type, UUID sender, CallbackInfo info) {
         var db = DiscordBot.getInstance();
         if (db != null) {
-            db.sendSystemMessage(message.getString());
+            db.sendSystemMessage(message);
         }
     }
 }
