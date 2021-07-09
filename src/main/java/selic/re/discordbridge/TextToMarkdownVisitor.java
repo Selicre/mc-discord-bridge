@@ -13,7 +13,27 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     boolean strikethrough;
     boolean spoiler;
 
-    public String get() {
+    public String finish() {
+        if (spoiler) {
+            result.append("||");
+            spoiler = false;
+        }
+        if (strikethrough) {
+            result.append("~~");
+            strikethrough = false;
+        }
+        if (underline) {
+            result.append("__");
+            underline = false;
+        }
+        if (italic) {
+            result.append("*");
+            italic = false;
+        }
+        if (bold) {
+            result.append("**");
+            bold = false;
+        }
         return result.toString();
     }
 

@@ -214,7 +214,6 @@ public class DiscordFormattingConverter {
 
     public static LiteralText discordUserToMinecraft(User user, Guild guild) {
         Member member = guild.getMember(user);
-        System.out.println(member);
         LiteralText author = new LiteralText(member == null ? user.getName() : member.getEffectiveName());
         HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(user.getAsTag()));
         Style style = Style.EMPTY;
@@ -228,7 +227,7 @@ public class DiscordFormattingConverter {
     public static String minecraftToDiscord(Text root) {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
         root.visit(visitor, Style.EMPTY);
-        return visitor.get();
+        return visitor.finish();
     }
 
     protected enum Formatting {
