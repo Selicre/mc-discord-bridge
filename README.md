@@ -12,7 +12,9 @@ The config goes in `config/discord-bridge.json` and contains these keys:
 {
   "token": "insert-bot-token-here",
   "channel_id": 123123123123123,
-  "webhook_url": "insert-webhook-url-here"
+  "webhook_url": "insert-webhook-url-here",
+  "rename_channel_id": 0,
+  "rename_channel_format": "%d player(s) online"
 }
 ```
 

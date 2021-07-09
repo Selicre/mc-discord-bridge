@@ -8,6 +8,8 @@ import java.io.FileReader;
 public class Config {
     String token;
     long channel_id;
+    long rename_channel_id;
+    String rename_channel_format;
     String webhook_url;
 
     public static Config reloadFromFile(String filename) throws FileNotFoundException {
