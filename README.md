@@ -14,7 +14,8 @@ The config goes in `config/discord-bridge.json` and contains these keys:
   "channel_id": 123123123123123,
   "webhook_url": "insert-webhook-url-here",
   "rename_channel_id": 0,
-  "rename_channel_format": "%d player(s) online"
+  "rename_channel_format": "%d player(s) online",
+  "voice_channel_id": 0
 }
 ```
 

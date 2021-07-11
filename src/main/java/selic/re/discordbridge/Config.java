@@ -11,6 +11,7 @@ public class Config {
     long rename_channel_id;
     String rename_channel_format;
     String webhook_url;
+    long voice_channel_id;
 
     public static Config reloadFromFile(String filename) throws FileNotFoundException {
         FileReader fr = new FileReader(filename);

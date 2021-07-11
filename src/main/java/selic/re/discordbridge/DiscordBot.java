@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -21,6 +23,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 import java.time.Duration;
@@ -30,8 +33,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import static selic.re.discordbridge.DiscordFormattingConverter.discordUserToMinecraft;
+import static selic.re.discordbridge.DiscordFormattingConverter.discordChannelToMinecraft;
 import static selic.re.discordbridge.DiscordFormattingConverter.discordMessageToMinecraft;
+import static selic.re.discordbridge.DiscordFormattingConverter.discordUserToMinecraft;
 import static selic.re.discordbridge.DiscordFormattingConverter.minecraftToDiscord;
 
 public class DiscordBot extends ListenerAdapter {
@@ -60,7 +64,7 @@ public class DiscordBot extends ListenerAdapter {
     DiscordBot(Config config, MinecraftServer server) throws LoginException {
         this.server = server;
         this.config = config;
-        this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS)
+        this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES)
             .addEventListeners(this)
             .build();
         this.webhook = new WebhookClientBuilder(config.webhook_url).build();
@@ -75,6 +79,29 @@ public class DiscordBot extends ListenerAdapter {
                 });
             }
         }, 30000, 30000);
+    }
+
+    public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
+        VoiceChannel joined = event.getChannelJoined();
+        VoiceChannel left = event.getChannelLeft();
+
+        if (joined != null && joined.getIdLong() == config.voice_channel_id) {
+            LiteralText root = new LiteralText("");
+            root.append(discordUserToMinecraft(event.getMember().getUser(), event.getGuild()));
+            root.append(" has joined ");
+            root.append(discordChannelToMinecraft(joined));
+            root.append(" (" + joined.getMembers().size() + " users now in VC)");
+            broadcastNoMirror(root);
+        }
+
+        if (left != null && left.getIdLong() == config.voice_channel_id) {
+            LiteralText root = new LiteralText("");
+            root.append(discordUserToMinecraft(event.getMember().getUser(), event.getGuild()));
+            root.append(" has left ");
+            root.append(discordChannelToMinecraft(left));
+            root.append(" (" + left.getMembers().size() + " users now in VC)");
+            broadcastNoMirror(root);
+        }
     }
 
     @Override

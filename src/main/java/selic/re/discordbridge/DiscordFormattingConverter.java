@@ -2,6 +2,7 @@ package selic.re.discordbridge;
 
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
@@ -18,7 +19,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 public class DiscordFormattingConverter {
     // Order matters here, we don't want _ to trigger and stop __ from being detected
@@ -178,10 +178,8 @@ public class DiscordFormattingConverter {
     }
 
     private void addChannelMention(TextChannel channel) {
-        LiteralText text = new LiteralText("#" + channel.getName());
-        text.setStyle(Style.EMPTY.withInsertion(channel.getAsMention()));
         popSimpleText();
-        addText(text);
+        addText(discordChannelToMinecraft(channel));
     }
 
     private void addEmoteMention(Emote emote) {
@@ -204,6 +202,25 @@ public class DiscordFormattingConverter {
         } else {
             root.append(text);
         }
+    }
+
+    public static Text discordChannelToMinecraft(GuildChannel channel) {
+        String name;
+        String type;
+        if (channel.getType().isAudio()) {
+            type = "Voice channel";
+            name = channel.getName();
+        } else if (channel.getType().isMessage()) {
+            type = "Text channel";
+            name = "#" + channel.getName();
+        } else {
+            type = "Channel";
+            name = channel.getName();
+        }
+        LiteralText text = new LiteralText(name);
+        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(type));
+        text.setStyle(Style.EMPTY.withInsertion(channel.getAsMention()).withHoverEvent(hover));
+        return text;
     }
 
     public static Text discordMessageToMinecraft(Message message) {
