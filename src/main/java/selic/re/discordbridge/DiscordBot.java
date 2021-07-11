@@ -9,13 +9,11 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
@@ -119,18 +117,22 @@ public class DiscordBot extends ListenerAdapter {
                     root.append("]");
                 }
             }
-            this.broadcastNoMirror(server.getPlayerManager(), root);
+            this.broadcastNoMirror(root);
         }
     }
 
     // This method is a reimplementation of broadcastChatMessage that will not mirror to discord.
-    private void broadcastNoMirror(PlayerManager pm, Text message) {
+    private void broadcastNoMirror(Text message) {
+        if (!server.isOnThread()) {
+            server.execute(() -> this.broadcastNoMirror(message));
+            return;
+        }
         MessageType type = MessageType.CHAT;
         UUID sender = new UUID(0, 0);
 
-        pm.getServer().sendSystemMessage(message, sender);
+        server.sendSystemMessage(message, sender);
 
-        for (ServerPlayerEntity serverPlayerEntity : pm.getPlayerList()) {
+        for (ServerPlayerEntity serverPlayerEntity : server.getPlayerManager().getPlayerList()) {
             serverPlayerEntity.sendMessage(message, type, sender);
         }
     }
