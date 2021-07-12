@@ -15,9 +15,6 @@ import java.util.UUID;
 public class BroadcastHandlerMixin {
     @Inject(at = @At("HEAD"), method = "broadcastChatMessage")
     public void preBroadcastChatMessage(Text message, MessageType type, UUID sender, CallbackInfo info) {
-        var db = DiscordBot.getInstance();
-        if (db != null) {
-            db.sendSystemMessage(message);
-        }
+        DiscordBot.getInstance().ifPresent(db -> db.sendSystemMessage(message));
     }
 }

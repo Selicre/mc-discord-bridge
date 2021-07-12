@@ -17,26 +17,19 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import static selic.re.discordbridge.DiscordFormattingConverter.discordChannelToMinecraft;
-import static selic.re.discordbridge.DiscordFormattingConverter.discordMessageToMinecraft;
-import static selic.re.discordbridge.DiscordFormattingConverter.discordUserToMinecraft;
-import static selic.re.discordbridge.DiscordFormattingConverter.minecraftToDiscord;
+import static selic.re.discordbridge.DiscordFormattingConverter.*;
 
 public class DiscordBot extends ListenerAdapter {
     // Discord... please :(
@@ -56,9 +49,9 @@ public class DiscordBot extends ListenerAdapter {
         INSTANCE = new DiscordBot(config, server);
     }
 
-    @Nullable
-    public static DiscordBot getInstance() {
-        return INSTANCE;
+    @Nonnull
+    public static Optional<DiscordBot> getInstance() {
+        return Optional.of(INSTANCE);
     }
 
     DiscordBot(Config config, MinecraftServer server) throws LoginException {

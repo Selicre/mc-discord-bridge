@@ -6,7 +6,6 @@
   "mixins": [
     "BroadcastHandlerMixin",
     "NetworkHandlerMixin",
-    "TellRawHandlerMixin",
     "PlayerManagerMixin"
   ],
   "client": [
