@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Mixin(PlayerManager.class)
 abstract class BroadcastHandlerMixin {
-    @Inject(at = @At("HEAD"), method = "broadcastChatMessage")
+    @Inject(method = "broadcastChatMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/MessageType;Ljava/util/UUID;)V", at = @At("HEAD"))
     private void preBroadcastChatMessage(Text message, MessageType type, UUID sender, CallbackInfo info) {
         DiscordBot.getInstance().ifPresent(db -> db.sendSystemMessage(message));
     }

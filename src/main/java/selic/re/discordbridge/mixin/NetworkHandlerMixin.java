@@ -13,7 +13,7 @@ import selic.re.discordbridge.DiscordBot;
 
 @Mixin(ServerPlayNetworkHandler.class)
 abstract class NetworkHandlerMixin implements EntityTrackingListener, ServerPlayPacketListener {
-	@Inject(at = @At("HEAD"), method = "handleMessage")
+	@Inject(method = "handleMessage(Lnet/minecraft/server/filter/TextStream$Message;)V", at = @At("HEAD"))
 	private void preMessage(TextStream.Message message, CallbackInfo info) {
 		String msg = message.getRaw();
 		if (!msg.startsWith("/")) {
