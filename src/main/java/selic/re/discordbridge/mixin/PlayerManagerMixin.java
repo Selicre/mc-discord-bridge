@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import selic.re.discordbridge.DiscordBot;
 
 @Mixin(PlayerManager.class)
-public class PlayerManagerMixin {
+abstract class PlayerManagerMixin {
     @Inject(method = "remove(Lnet/minecraft/server/network/ServerPlayerEntity;)V", at = @At("RETURN"))
     private void remove(CallbackInfo ci) {
         DiscordBot.getInstance().ifPresent(DiscordBot::onPlayersChanged);

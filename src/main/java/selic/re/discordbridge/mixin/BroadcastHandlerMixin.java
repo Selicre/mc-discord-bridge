@@ -12,9 +12,9 @@ import selic.re.discordbridge.DiscordBot;
 import java.util.UUID;
 
 @Mixin(PlayerManager.class)
-public class BroadcastHandlerMixin {
+abstract class BroadcastHandlerMixin {
     @Inject(at = @At("HEAD"), method = "broadcastChatMessage")
-    public void preBroadcastChatMessage(Text message, MessageType type, UUID sender, CallbackInfo info) {
+    private void preBroadcastChatMessage(Text message, MessageType type, UUID sender, CallbackInfo info) {
         DiscordBot.getInstance().ifPresent(db -> db.sendSystemMessage(message));
     }
 }
