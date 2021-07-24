@@ -146,11 +146,11 @@ public class DiscordBot extends ListenerAdapter {
     private static String readableFileSize(Message.Attachment attachment) {
         int size = attachment.getSize();
 
-        if (Double.compare(size / (1024.0 * 1024.0), 0.0) > 0) {
+        if ((size / (1024 * 1024)) > 0) {
             return "%.2f MB".formatted(size / (1024.0 * 1024.0));
         }
 
-        if (Double.compare(size / 1024.0, 0.0) > 0) {
+        if ((size / 1024) > 0) {
             return "%.2f KB".formatted(size / 1024.0);
         }
 
