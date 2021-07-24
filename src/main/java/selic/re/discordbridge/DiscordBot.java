@@ -127,7 +127,7 @@ public class DiscordBot extends ListenerAdapter {
             if (!msg.getAttachments().isEmpty()) {
                 for (Message.Attachment attachment : msg.getAttachments()) {
                     root.append(" [");
-                    // If the file is intended to be hidden by a spoiler ,we wrap it with exclamation marks: [!file.txt!]
+                    // If the file is intended to be hidden by a spoiler, we wrap it with exclamation marks: [!file.txt!]
                     LiteralText text = new LiteralText(FILE_SPOILER.matcher(attachment.getFileName()).replaceFirst("!$1!"));
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
                     // Display the media type and readable file size in the on mouse-over: text/plain | 103 bytes
