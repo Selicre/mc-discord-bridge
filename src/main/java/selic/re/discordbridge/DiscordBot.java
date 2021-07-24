@@ -28,12 +28,14 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static selic.re.discordbridge.DiscordFormattingConverter.*;
 
 public class DiscordBot extends ListenerAdapter {
     // Discord... please :(
     private static final TemporalAmount TIME_BETWEEN_TOPIC_UPDATES = Duration.ofMinutes(10);
+    private static final Pattern FILE_SPOILER = Pattern.compile("^SPOILER_(.*)");
 
     static DiscordBot INSTANCE;
 
@@ -125,10 +127,11 @@ public class DiscordBot extends ListenerAdapter {
             if (!msg.getAttachments().isEmpty()) {
                 for (Message.Attachment attachment : msg.getAttachments()) {
                     root.append(" [");
-                    LiteralText text = new LiteralText(attachment.getFileName());
+                    // If the file is intended to be hidden by a spoiler ,we wrap it with exclamation marks [!file.txt!]
+                    LiteralText text = new LiteralText(FILE_SPOILER.matcher(attachment.getFileName()).replaceFirst("!$1!"));
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
                     HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(
-                        "%s%n%.2fKB".formatted(attachment.getContentType(), attachment.getSize() / 1000.0)
+                        "%s | %s".formatted(attachment.getContentType(), readableFileSize(attachment))
                     ));
                     text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
                     root.append(text);
@@ -137,6 +140,20 @@ public class DiscordBot extends ListenerAdapter {
             }
             this.broadcastNoMirror(root);
         }
+    }
+
+    private static String readableFileSize(Message.Attachment attachment) {
+        int size = attachment.getSize();
+
+        if (Double.compare(size / (1024.0 * 1024.0), 0.0) > 0) {
+            return "%.2f MB".formatted(size / (1024.0 * 1024.0));
+        }
+
+        if (Double.compare(size / 1024.0, 0.0) > 0) {
+            return "%.2f KB".formatted(size / 1024.0);
+        }
+
+        return "%d bytes".formatted(size);
     }
 
     // This method is a reimplementation of broadcastChatMessage that will not mirror to discord.
