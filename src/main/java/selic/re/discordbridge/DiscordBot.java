@@ -125,16 +125,11 @@ public class DiscordBot extends ListenerAdapter {
             if (!msg.getAttachments().isEmpty()) {
                 for (Message.Attachment attachment : msg.getAttachments()) {
                     root.append(" [");
-                    LiteralText text;
-                    if (attachment.isImage()) {
-                        text = new LiteralText("image");
-                    } else if (attachment.isVideo()) {
-                        text = new LiteralText("video");
-                    } else {
-                        text = new LiteralText("attachment");
-                    }
+                    LiteralText text = new LiteralText(attachment.getFileName());
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
-                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(attachment.getFileName() + "\n" + (attachment.getSize() / 1000) + " kb"));
+                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(
+                        "%s%n%.2fKB".formatted(attachment.getContentType(), attachment.getSize() / 1000.0)
+                    ));
                     text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
                     root.append(text);
                     root.append("]");
