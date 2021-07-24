@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class DiscordFormattingConverter {
@@ -121,7 +122,7 @@ public class DiscordFormattingConverter {
 
         LiteralText text = new LiteralText(textBuffer.toString());
         textBuffer.setLength(0);
-        text.setStyle(entry.formatting.getStyle());
+        text.setStyle(entry.formatting.getStyle(text));
         for (Text child : entry.children) {
             text.append(child);
         }
@@ -249,28 +250,28 @@ public class DiscordFormattingConverter {
     }
 
     protected enum Formatting {
-        Root(style -> style),
-        Bold(style -> style.withBold(true), "**"),
-        Italic(style -> style.withItalic(true), "*", "_"),
-        Underline(style -> style.withUnderline(true), "__"),
-        Strikethrough(style -> style.withStrikethrough(true), "~~"),
-        InlineCode(style -> style.withColor(net.minecraft.util.Formatting.GRAY), "`"),
+        Root((msg, style) -> style),
+        Bold((msg, style) -> style.withBold(true), "**"),
+        Italic((msg, style) -> style.withItalic(true), "*", "_"),
+        Underline((msg, style) -> style.withUnderline(true), "__"),
+        Strikethrough((msg, style) -> style.withStrikethrough(true), "~~"),
+        InlineCode((msg, style) -> style.withColor(net.minecraft.util.Formatting.GRAY), "`"),
         //CodeBlock(style -> style, "```"),
         //Quote(style -> style, ">"),
         //BlockQuotes(style -> style, ">>>"),
-        Spoilers(style -> style.obfuscated(true), "||"),
+        Spoilers((msg, style) -> style.obfuscated(true).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, msg)), "||"),
         ;
 
-        protected final Function<Style, Style> styler;
+        protected final BiFunction<Text, Style, Style> styler;
         protected final String[] triggers;
 
-        Formatting(Function<Style, Style> styler, String... triggers) {
+        Formatting(BiFunction<Text, Style, Style> styler, String... triggers) {
             this.styler = styler;
             this.triggers = triggers;
         }
 
-        protected Style getStyle() {
-            return styler.apply(Style.EMPTY);
+        protected Style getStyle(Text message) {
+            return styler.apply(message, Style.EMPTY);
         }
     }
 
