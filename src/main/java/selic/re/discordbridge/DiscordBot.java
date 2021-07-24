@@ -107,8 +107,9 @@ public class DiscordBot extends ListenerAdapter {
             root.append("<");
             root.append(discordUserToMinecraft(msg.getAuthor(), msg.getGuild()));
 
-            if (msg.getReferencedMessage() != null) {
-                root.append(" -> ");
+            if (msg.getReferencedMessage() != null && !msg.getReferencedMessage().getContentRaw().isEmpty()) {
+                root.append(new LiteralText(" -> ")
+                    .setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, discordMessageToMinecraft(msg)))));
                 root.append(discordUserToMinecraft(msg.getReferencedMessage().getAuthor(), msg.getGuild()));
             }
 
