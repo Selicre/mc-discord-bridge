@@ -193,7 +193,8 @@ public class DiscordFormattingConverter {
 
     private void addUserMention(User user) {
         popSimpleText();
-        addText(discordUserToMinecraft(user, message.getGuild()));
+        Text userText = discordUserToMinecraft(user, message.getGuild());
+        addText(new LiteralText("@").setStyle(userText.getStyle()).append(userText));
     }
 
     private void addText(Text text) {
