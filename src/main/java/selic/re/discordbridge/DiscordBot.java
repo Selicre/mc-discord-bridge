@@ -7,6 +7,7 @@ import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.GuildChannel;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
@@ -84,26 +85,25 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
-        VoiceChannel joined = event.getChannelJoined();
-        VoiceChannel left = event.getChannelLeft();
+        final var joined = event.getChannelJoined();
 
         if (joined != null && joined.getIdLong() == config.voiceChannelId) {
-            LiteralText root = new LiteralText("");
-            root.append(discordUserToMinecraft(event.getMember().getUser(), event.getGuild()));
-            root.append(" has joined ");
-            root.append(discordChannelToMinecraft(joined));
-            root.append(" (" + joined.getMembers().size() + " users now in VC)");
-            broadcastNoMirror(root);
+            broadcastUpdate(joined, event.getMember(), "joined");
         }
 
+        final var left = event.getChannelLeft();
+
         if (left != null && left.getIdLong() == config.voiceChannelId) {
-            LiteralText root = new LiteralText("");
-            root.append(discordUserToMinecraft(event.getMember().getUser(), event.getGuild()));
-            root.append(" has left ");
-            root.append(discordChannelToMinecraft(left));
-            root.append(" (" + left.getMembers().size() + " users now in VC)");
-            broadcastNoMirror(root);
+            broadcastUpdate(left, event.getMember(), "left");
         }
+    }
+
+    private void broadcastUpdate(final VoiceChannel channel, final Member member, final String action) {
+        broadcastNoMirror(new LiteralText("")
+            .append(discordUserToMinecraft(member.getUser(), member.getGuild()))
+            .append(" " + action + " ")
+            .append(discordChannelToMinecraft(channel))
+            .append(" (" + channel.getMembers().size() + " users connected)"));
     }
 
     @Override
