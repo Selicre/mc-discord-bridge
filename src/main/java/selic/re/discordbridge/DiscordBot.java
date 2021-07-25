@@ -166,15 +166,6 @@ public class DiscordBot extends ListenerAdapter {
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println(Byte.MAX_VALUE);
-        System.out.println(readableFileSize(Byte.MAX_VALUE));
-        System.out.println(Short.MAX_VALUE / 1000.0);
-        System.out.println(readableFileSize(Short.MAX_VALUE));
-        System.out.println(192000000 / 1000.0 / 1000.0);
-        System.out.println(readableFileSize(192000000));
-    }
-
     private static String readableFileSize(final int sizeBytes) {
         if ((sizeBytes / MB) > 0) { // Size is more than or equal to 1 MB
             return "%s MB".formatted(FILE_SIZE_FORMAT.format(sizeBytes / (double) MB));
