@@ -18,10 +18,10 @@ import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
 import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 import java.time.Duration;
 import java.time.Instant;
@@ -127,21 +127,31 @@ public class DiscordBot extends ListenerAdapter {
             if (!msg.getAttachments().isEmpty()) {
                 for (Message.Attachment attachment : msg.getAttachments()) {
                     root.append(" [");
-                    LiteralText text;
+                    LiteralText fileType = null;
                     if (attachment.isImage()) {
-                        text = new LiteralText("image");
+                        fileType = new LiteralText("image");
                     } else if (attachment.isVideo()) {
-                        text = new LiteralText("video");
+                        fileType = new LiteralText("video");
                     } else {
-                        text = new LiteralText("attachment");
+                        @Nullable String mediaType = attachment.getContentType();
+                        if (mediaType != null) {
+                            if (mediaType.startsWith("text")) {
+                                fileType = new LiteralText("text");
+                            } else if (mediaType.startsWith("audio")) {
+                                fileType = new LiteralText("audio");
+                            }
+                        }
+                        if (fileType == null)  {
+                            fileType = new LiteralText("attachment");
+                        }
                     }
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
                     HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("")
                         .append(attachment.getFileName())
                         .append("\n")
                         .append(new LiteralText(readableFileSize(attachment.getSize()))));
-                    text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
-                    root.append(text);
+                    fileType.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
+                    root.append(fileType);
                     root.append("]");
                 }
             }
