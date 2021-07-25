@@ -18,6 +18,7 @@ import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
+import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
@@ -134,7 +135,7 @@ public class DiscordBot extends ListenerAdapter {
                         text = new LiteralText("attachment");
                     }
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
-                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(attachment.getFileName() + "\n" + (attachment.getSize() / 1000) + " kb"));
+                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(attachment.getFileName() + "\n" + readableFileSize(attachment.getSize())));
                     text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
                     root.append(text);
                     root.append("]");
@@ -142,6 +143,18 @@ public class DiscordBot extends ListenerAdapter {
             }
             this.broadcastNoMirror(root);
         }
+    }
+
+    private static String readableFileSize(final int sizeBytes) {
+        if ((sizeBytes / FileUtils.ONE_MB) > 0) {
+            return "%.2f MB".formatted(sizeBytes / (double) FileUtils.ONE_MB);
+        }
+
+        if ((sizeBytes / FileUtils.ONE_KB) > 0) {
+            return "%.2f KB".formatted(sizeBytes / (double) FileUtils.ONE_KB);
+        }
+
+        return "%d bytes".formatted(sizeBytes);
     }
 
     // This method is a reimplementation of broadcastChatMessage that will not mirror to discord.
