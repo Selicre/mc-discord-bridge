@@ -18,11 +18,11 @@ import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
-import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
+import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
@@ -36,6 +36,13 @@ import static selic.re.discordbridge.DiscordFormattingConverter.*;
 public class DiscordBot extends ListenerAdapter {
     // Discord... please :(
     private static final TemporalAmount TIME_BETWEEN_TOPIC_UPDATES = Duration.ofMinutes(10);
+
+    // Unlike %.2f, a decimal format will omit redundant trailing zeros, e.g 10.00 MB -> 10 MB
+    private static final DecimalFormat FILE_SIZE_FORMAT = new DecimalFormat("#.##");
+
+    // Decimal conversions rather than binary
+    private static final int KB = 1000;
+    private static final int MB = KB * KB;
 
     static DiscordBot INSTANCE;
 
@@ -159,15 +166,25 @@ public class DiscordBot extends ListenerAdapter {
         }
     }
 
+    public static void main(String[] args) {
+        System.out.println(Byte.MAX_VALUE);
+        System.out.println(readableFileSize(Byte.MAX_VALUE));
+        System.out.println(Short.MAX_VALUE / 1000.0);
+        System.out.println(readableFileSize(Short.MAX_VALUE));
+        System.out.println(192000000 / 1000.0 / 1000.0);
+        System.out.println(readableFileSize(192000000));
+    }
+
     private static String readableFileSize(final int sizeBytes) {
-        if ((sizeBytes / FileUtils.ONE_MB) > 0) {
-            return "%.2f MB".formatted(sizeBytes / (double) FileUtils.ONE_MB);
+        if ((sizeBytes / MB) > 0) { // Size is more than or equal to 1 MB
+            return "%s MB".formatted(FILE_SIZE_FORMAT.format(sizeBytes / (double) MB));
         }
 
-        if ((sizeBytes / FileUtils.ONE_KB) > 0) {
-            return "%.2f KB".formatted(sizeBytes / (double) FileUtils.ONE_KB);
+        if ((sizeBytes / KB) > 0) { // Size is more than or equal to 1 KB
+            return "%s KB".formatted(FILE_SIZE_FORMAT.format(sizeBytes / (double) KB));
         }
 
+        // Size is less than 1000 bytes
         return "%d bytes".formatted(sizeBytes);
     }
 
