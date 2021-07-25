@@ -18,6 +18,7 @@ import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nonnull;
@@ -135,7 +136,10 @@ public class DiscordBot extends ListenerAdapter {
                         text = new LiteralText("attachment");
                     }
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
-                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(attachment.getFileName() + "\n" + readableFileSize(attachment.getSize())));
+                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("")
+                        .append(attachment.getFileName())
+                        .append("\n")
+                        .append(new LiteralText(readableFileSize(attachment.getSize()))));
                     text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
                     root.append(text);
                     root.append("]");
