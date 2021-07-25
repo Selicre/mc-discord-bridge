@@ -3,6 +3,7 @@ package selic.re.discordbridge;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookClientBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
+import com.google.common.base.MoreObjects;
 import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -20,22 +21,22 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import static selic.re.discordbridge.DiscordFormattingConverter.*;
 
 public class DiscordBot extends ListenerAdapter {
     // Discord... please :(
     private static final TemporalAmount TIME_BETWEEN_TOPIC_UPDATES = Duration.ofMinutes(10);
-    private static final Pattern FILE_SPOILER = Pattern.compile("^SPOILER_(.*)");
 
     static DiscordBot INSTANCE;
 
@@ -127,13 +128,16 @@ public class DiscordBot extends ListenerAdapter {
             if (!msg.getAttachments().isEmpty()) {
                 for (Message.Attachment attachment : msg.getAttachments()) {
                     root.append(" [");
-                    // If the file is intended to be hidden by a spoiler, we wrap it with exclamation marks: [!file.txt!]
-                    LiteralText text = new LiteralText(FILE_SPOILER.matcher(attachment.getFileName()).replaceFirst("!$1!"));
+                    @Nullable String type = attachment.getContentType();
+                    if (type == null) {
+                        // If media type is null (not provided), default to file-extension-based typing
+                        type = "unknown/" + Objects.toString(attachment.getFileExtension(), "unknown");
+                    }
+                    // Display the media type and readable file size: [text/plain | 103 bytes], [image/png 15.02 KB]
+                    LiteralText text = new LiteralText("%s | %s".formatted(type, readableFileSize(attachment)));
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
-                    // Display the media type and readable file size in the on mouse-over: text/plain | 103 bytes
-                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(
-                        "%s | %s".formatted(attachment.getContentType(), readableFileSize(attachment))
-                    ));
+                    // Display the full file name on mouse-over: file.txt, SPOILER_unknown.png
+                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(attachment.getFileName()));
                     text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
                     root.append(text);
                     root.append("]");
