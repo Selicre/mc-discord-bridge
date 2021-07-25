@@ -45,9 +45,9 @@ public class DiscordBot extends ListenerAdapter {
     private Instant nextTopicUpdateTime = Instant.now();
     private boolean topicNeedsUpdating = true;
     MinecraftServer server;
-    Config config;
+    DiscordBotConfig config;
 
-    public static void init(Config config, MinecraftServer server) throws LoginException {
+    public static void init(DiscordBotConfig config, MinecraftServer server) throws LoginException {
         INSTANCE = new DiscordBot(config, server);
     }
 
@@ -56,13 +56,13 @@ public class DiscordBot extends ListenerAdapter {
         return Optional.of(INSTANCE);
     }
 
-    DiscordBot(Config config, MinecraftServer server) throws LoginException {
+    DiscordBot(DiscordBotConfig config, MinecraftServer server) throws LoginException {
         this.server = server;
         this.config = config;
         this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES)
             .addEventListeners(this)
             .build();
-        this.webhook = new WebhookClientBuilder(config.webhook_url).build();
+        this.webhook = new WebhookClientBuilder(config.webhookUrl).build();
 
         this.updateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -80,7 +80,7 @@ public class DiscordBot extends ListenerAdapter {
         VoiceChannel joined = event.getChannelJoined();
         VoiceChannel left = event.getChannelLeft();
 
-        if (joined != null && joined.getIdLong() == config.voice_channel_id) {
+        if (joined != null && joined.getIdLong() == config.voiceChannelId) {
             LiteralText root = new LiteralText("");
             root.append(discordUserToMinecraft(event.getMember().getUser(), event.getGuild()));
             root.append(" has joined ");
@@ -89,7 +89,7 @@ public class DiscordBot extends ListenerAdapter {
             broadcastNoMirror(root);
         }
 
-        if (left != null && left.getIdLong() == config.voice_channel_id) {
+        if (left != null && left.getIdLong() == config.voiceChannelId) {
             LiteralText root = new LiteralText("");
             root.append(discordUserToMinecraft(event.getMember().getUser(), event.getGuild()));
             root.append(" has left ");
@@ -102,7 +102,7 @@ public class DiscordBot extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
     {
-        if (event.getChannel().getIdLong() == config.channel_id && !event.getAuthor().isBot()) {
+        if (event.getChannel().getIdLong() == config.channelId && !event.getAuthor().isBot()) {
             Message msg = event.getMessage();
             LiteralText root = new LiteralText("");
 
@@ -209,7 +209,7 @@ public class DiscordBot extends ListenerAdapter {
         nextTopicUpdateTime = Instant.now().plus(TIME_BETWEEN_TOPIC_UPDATES);
         topicNeedsUpdating = false;
 
-        TextChannel chatChannel = discord.getTextChannelById(config.channel_id);
+        TextChannel chatChannel = discord.getTextChannelById(config.channelId);
         if (chatChannel != null) {
             if (server.getPlayerNames().length == 0) {
                 chatChannel.getManager().setTopic("Online!").queue();
@@ -225,9 +225,9 @@ public class DiscordBot extends ListenerAdapter {
             }
         }
 
-        GuildChannel renameChannel = discord.getGuildChannelById(config.rename_channel_id);
+        GuildChannel renameChannel = discord.getGuildChannelById(config.renameChannelId);
         if (renameChannel != null) {
-            renameChannel.getManager().setName(String.format(config.rename_channel_format, server.getCurrentPlayerCount())).queue();
+            renameChannel.getManager().setName(String.format(config.renameChannelFormat, server.getCurrentPlayerCount())).queue();
         }
     }
 
