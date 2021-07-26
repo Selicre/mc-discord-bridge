@@ -225,14 +225,7 @@ public class DiscordBot extends ListenerAdapter {
                 chatChannel.getManager().setTopic("Online!").queue();
             } else {
                 Arrays.sort(playerNames, String.CASE_INSENSITIVE_ORDER);
-                StringBuilder topic = new StringBuilder();
-                for (String name : playerNames) {
-                    if (!topic.isEmpty()) {
-                        topic.append(", ");
-                    }
-                    topic.append(name);
-                }
-                chatChannel.getManager().setTopic("Online: " + topic).queue();
+                chatChannel.getManager().setTopic("Online: " + String.join(", ", playerNames)).queue();
             }
         }
 
