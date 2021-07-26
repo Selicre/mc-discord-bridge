@@ -11,13 +11,17 @@ import selic.re.discordbridge.DiscordBot;
 
 @Mixin(PlayerManager.class)
 abstract class PlayerManagerMixin {
-    @Inject(method = "remove(Lnet/minecraft/server/network/ServerPlayerEntity;)V", at = @At("RETURN"))
-    private void remove(CallbackInfo ci) {
+    @Inject(
+        method = "remove(Lnet/minecraft/server/network/ServerPlayerEntity;)V",
+        at = @At("RETURN"), require = 1)
+    private void remove(final CallbackInfo ci) {
         DiscordBot.getInstance().ifPresent(DiscordBot::onPlayersChanged);
     }
 
-    @Inject(method = "onPlayerConnect(Lnet/minecraft/network/ClientConnection;Lnet/minecraft/server/network/ServerPlayerEntity;)V", at = @At("RETURN"))
-    private void remove(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
+    @Inject(
+        method = "onPlayerConnect(Lnet/minecraft/network/ClientConnection;Lnet/minecraft/server/network/ServerPlayerEntity;)V",
+        at = @At("RETURN"), require = 1, allow = 1)
+    private void remove(final ClientConnection connection, final ServerPlayerEntity player, final CallbackInfo ci) {
         DiscordBot.getInstance().ifPresent(DiscordBot::onPlayersChanged);
     }
 }

@@ -1,6 +1,5 @@
 package selic.re.discordbridge.mixin;
 
-import com.mojang.authlib.GameProfile;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.server.filter.TextStream;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -13,23 +12,26 @@ import selic.re.discordbridge.DiscordBot;
 
 @Mixin(ServerPlayNetworkHandler.class)
 abstract class NetworkHandlerMixin implements EntityTrackingListener, ServerPlayPacketListener {
-	@Inject(method = "handleMessage(Lnet/minecraft/server/filter/TextStream$Message;)V", at = @At("HEAD"))
-	private void preMessage(TextStream.Message message, CallbackInfo info) {
-		String msg = message.getRaw();
-		if (!msg.startsWith("/")) {
-			GameProfile player = this.getPlayer().getGameProfile();
-			/*var db = DiscordBot.getInstance();
-			if (db != null) {
-				db.sendChatMessage(player, msg);
-			}*/
-			DiscordBot.getInstance().ifPresent(db -> db.sendChatMessage(player, msg));
-		} else if (msg.startsWith("/me ")) {
-			// The reason why this has to be handled individually is because in this particular instance,
-			// the broadcast() method is used; this relies on internal behaviour and should probably
-			// be changed to match the translatable string rather than hijacking this particular class.
-			// That said, it works. For now.
-			GameProfile player = this.getPlayer().getGameProfile();
-			DiscordBot.getInstance().ifPresent(db -> db.sendEmoteMessage(player, msg.substring(4)));
-		}
-	}
+    @Inject(
+        method = "handleMessage(Lnet/minecraft/server/filter/TextStream$Message;)V",
+        at = @At("HEAD"), require = 1)
+    private void preMessage(final TextStream.Message message, final CallbackInfo info) {
+        final var str = message.getRaw();
+
+        if (!str.startsWith("/")) {
+            DiscordBot.getInstance().ifPresent(bot -> {
+                bot.sendChatMessage(this.getPlayer().getGameProfile(), str);
+            });
+        } else if (str.startsWith("/me ")) {
+            /*
+             The reason why this has to be handled individually is because in this particular instance,
+             the broadcast() method is used; this relies on internal behaviour and should probably
+             be changed to match the translatable string rather than hijacking this particular class.
+             That said, it works. For now.
+            */
+            DiscordBot.getInstance().ifPresent(bot -> {
+                bot.sendEmoteMessage(this.getPlayer().getGameProfile(), str.substring("/me ".length()));
+            });
+        }
+    }
 }
