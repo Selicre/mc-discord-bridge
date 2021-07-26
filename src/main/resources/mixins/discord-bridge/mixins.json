@@ -1,16 +1,12 @@
 {
-  "required": true,
   "minVersion": "0.8",
-  "package": "selic.re.discordbridge.mixin",
   "compatibilityLevel": "JAVA_16",
+  "required": true,
+  "package": "selic.re.discordbridge.mixin",
   "mixins": [
     "BroadcastHandlerMixin",
     "NetworkHandlerMixin",
     "PlayerManagerMixin"
   ],
-  "client": [
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  }
+  "refmap": "mixins/discord-bridge/refmap.json"
 }

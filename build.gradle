@@ -1,112 +1,107 @@
+import org.gradle.util.GradleVersion
+import java.time.Instant
+
 plugins {
-	id 'fabric-loom' version '0.8-SNAPSHOT'
-	id 'maven-publish'
+    id "fabric-loom" version "0.8-SNAPSHOT"
+    id "net.nemerosa.versioning" version "be24b23"
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+group = "selic.re"
+version = "1.1.0"
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version
-group = project.maven_group
+java {
+    withSourcesJar()
+}
+
+loom {
+    refmapName = "mixins/discord-bridge/refmap.json"
+    runs {
+        configureEach {
+            vmArg("-Dmixin.debug=true")
+            vmArg("-Dmixin.debug.export.decompile=false")
+            vmArg("-Dmixin.debug.verbose=true")
+            vmArg("-Dmixin.dumpTargetOnFailure=true")
+            vmArg("-Dmixin.checks=true")
+            vmArg("-Dmixin.hotSwap=true")
+        }
+    }
+}
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
-	mavenCentral() // for transitive dependencies
-	maven {
-		name 'm2-dv8tion'
-		url 'https://m2.dv8tion.net/releases'
-	}
+    mavenCentral()
+    maven {
+        url = "https://m2.dv8tion.net/releases"
+        content {
+            includeGroup "net.dv8tion"
+        }
+    }
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    minecraft "com.mojang:minecraft:1.17.1"
+    mappings "net.fabricmc:yarn:1.17.1+build.10:v2"
+    modImplementation "net.fabricmc:fabric-loader:0.11.6"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation include(fabricApi.module("fabric-api-base", "0.37.1+1.17"))
+    modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", "0.37.1+1.17"))
 
-	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
-	// You may need to force-disable transitiveness on them.
+    implementation(include("net.dv8tion:JDA:4.3.0_293")) {
+        exclude module: "opus-java"
+    }
 
-	include "net.dv8tion:JDA:4.3.0_293"
-	implementation("net.dv8tion:JDA:4.3.0_293") {
-		exclude module: 'opus-java'
-	}
+    implementation include("club.minnced:discord-webhooks:0.5.7")
 
-	include "club.minnced:discord-webhooks:0.5.7"
-	implementation("club.minnced:discord-webhooks:0.5.7")
-
-	include "com.neovisionaries:nv-websocket-client:2.14"
-	include "com.squareup.okhttp3:okhttp:3.13.0"
-	include "com.squareup.okio:okio:1.17.2"
-	include "org.apache.commons:commons-collections4:4.1"
-	include "org.apache.commons:commons-compress:1.8.1"
-	include "net.sf.trove4j:trove4j:3.0.3"
-	include "com.fasterxml.jackson.core:jackson-annotations:2.10.1"
-	include "com.fasterxml.jackson.core:jackson-core:2.10.1"
-	include "com.fasterxml.jackson.core:jackson-databind:2.10.1"
-	include "org.json:json:20210307"
+    include "com.neovisionaries:nv-websocket-client:2.14"
+    include "com.squareup.okhttp3:okhttp:3.13.0"
+    include "com.squareup.okio:okio:1.17.2"
+    include "org.apache.commons:commons-collections4:4.1"
+    include "org.apache.commons:commons-compress:1.8.1"
+    include "net.sf.trove4j:trove4j:3.0.3"
+    include "com.fasterxml.jackson.core:jackson-annotations:2.10.1"
+    include "com.fasterxml.jackson.core:jackson-core:2.10.1"
+    include "com.fasterxml.jackson.core:jackson-databind:2.10.1"
+    include "org.json:json:20210307"
 }
 
+compileJava {
+    options.with {
+        it.release.set(16)
+        it.fork = true
+        it.deprecation = true
+        it.encoding = "UTC-8"
+        it.compilerArgs.addAll(["-Xlint:all", "-parameters"])
+    }
+}
 
 processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	// ensure that the encoding is set to UTF-8, no matter what the system default is
-	// this fixes some edge cases with special characters not displaying correctly
-	// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-	// If Javadoc is generated, this must be specified in that task too.
-	it.options.encoding = "UTF-8"
-
-	// Minecraft 1.17 (21w19a) upwards uses Java 16.
-	it.options.release = 16
-}
-
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
+    filesMatching("/fabric.mod.json") {
+        expand("version": project.version)
+    }
 }
 
 jar {
-	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
-	}
+    from("/LICENSE")
+    manifest.attributes(
+        "Build-Timestamp": Instant.now(),
+        "Build-Revision": versioning.info.commit,
+        "Build-Jvm": "" +
+            "${System.getProperty("java.version")} (" +
+            "${System.getProperty("java.vm.vendor")} " +
+            "${System.getProperty("java.vm.version")})",
+        "Built-By": GradleVersion.current(),
+
+        "Implementation-Title": project.name,
+        "Implementation-Version": project.version,
+        "Implementation-Vendor": project.group,
+
+        "Specification-Title": project.name,
+        "Specification-Version": "1.0.0",
+        "Specification-Vendor": project.group,
+
+        "Sealed": "true"
+    )
 }
 
-// configure the maven publication
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			// add all the jars that should be included when publishing to maven
-			artifact(remapJar) {
-				builtBy remapJar
-			}
-			artifact(sourcesJar) {
-				builtBy remapSourcesJar
-			}
-		}
-	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
+assemble {
+    dependsOn versionFile
 }
