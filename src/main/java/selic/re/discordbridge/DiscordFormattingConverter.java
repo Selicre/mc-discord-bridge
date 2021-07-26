@@ -324,7 +324,7 @@ public class DiscordFormattingConverter {
             .append(TIMESTAMP_FORMATS.get(timestamp.getFormat()).formatted(dateTime))
             .append("]")
             .setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new LiteralText(TIMESTAMP_FORMATS.get(TimeFormat.DATE_TIME_SHORT).formatted(dateTime))
+                new LiteralText(TIMESTAMP_FORMATS.get(TimeFormat.DATE_TIME_LONG).formatted(dateTime))
             )).withInsertion(timestamp.toString()));
     }
 
