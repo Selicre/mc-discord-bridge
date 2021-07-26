@@ -27,6 +27,7 @@ import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -219,11 +220,13 @@ public class DiscordBot extends ListenerAdapter {
 
         TextChannel chatChannel = discord.getTextChannelById(config.channelId);
         if (chatChannel != null) {
-            if (server.getPlayerNames().length == 0) {
+            String[] playerNames = server.getPlayerNames();
+            if (playerNames.length == 0) {
                 chatChannel.getManager().setTopic("Online!").queue();
             } else {
+                Arrays.sort(playerNames, String.CASE_INSENSITIVE_ORDER);
                 StringBuilder topic = new StringBuilder();
-                for (String name : server.getPlayerNames()) {
+                for (String name : playerNames) {
                     if (!topic.isEmpty()) {
                         topic.append(", ");
                     }
