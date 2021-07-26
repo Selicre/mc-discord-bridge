@@ -1,5 +1,7 @@
 package selic.re.discordbridge;
 
+import com.google.common.base.CaseFormat;
+import com.google.common.base.Converter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.dv8tion.jda.api.entities.Emote;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class DiscordFormattingConverter {
@@ -47,6 +50,12 @@ public class DiscordFormattingConverter {
         Formatting.InlineCode,
 //        Formatting.Quote,
     };
+
+    /**
+     * Converts a given channel type constant name to a readable format, e.g 'VOICE' -> 'Voice channel'
+     */
+    private static final Function<String, String> CHANNEL_TYPE_STRINGIFIER =
+        CaseFormat.UPPER_UNDERSCORE.converterTo(CaseFormat.UPPER_CAMEL).andThen("%s channel"::formatted);
 
     /**
      * A single-group implementation of {@link TimeFormat#MARKDOWN} that also accounts for trailing characters
@@ -269,23 +278,12 @@ public class DiscordFormattingConverter {
         }
     }
 
-    public static Text discordChannelToMinecraft(GuildChannel channel) {
-        String name;
-        String type;
-        if (channel.getType().isAudio()) {
-            type = "Voice channel";
-            name = channel.getName();
-        } else if (channel.getType().isMessage()) {
-            type = "Text channel";
-            name = "#" + channel.getName();
-        } else {
-            type = "Channel";
-            name = channel.getName();
-        }
-        LiteralText text = new LiteralText(name);
-        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(type));
-        text.setStyle(Style.EMPTY.withInsertion(channel.getAsMention()).withHoverEvent(hover));
-        return text;
+    public static Text discordChannelToMinecraft(final GuildChannel channel) {
+        final var name = (channel.getType().isMessage() ? "#" : "") + channel.getName();
+        final var type = CHANNEL_TYPE_STRINGIFIER.apply(channel.getType().name());
+
+        return new LiteralText(name).setStyle(Style.EMPTY.withInsertion(channel.getAsMention())
+            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(type))));
     }
 
     public static Text discordMessageToMinecraft(Message message) {
