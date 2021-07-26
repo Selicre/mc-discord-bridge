@@ -68,7 +68,7 @@ compileJava {
         it.release.set(16)
         it.fork = true
         it.deprecation = true
-        it.encoding = "UTC-8"
+        it.encoding = "UTF-8"
         it.compilerArgs.addAll(["-Xlint:all", "-parameters"])
     }
 }
