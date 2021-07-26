@@ -1,5 +1,7 @@
 package selic.re.discordbridge;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
@@ -8,18 +10,24 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.utils.TimeFormat;
+import net.dv8tion.jda.api.utils.Timestamp;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
+import javax.annotation.Nullable;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.regex.Pattern;
 
 public class DiscordFormattingConverter {
     // Order matters here, we don't want _ to trigger and stop __ from being detected
@@ -39,6 +47,28 @@ public class DiscordFormattingConverter {
         Formatting.InlineCode,
 //        Formatting.Quote,
     };
+
+    /**
+     * A single-group implementation of {@link TimeFormat#MARKDOWN} that also accounts for trailing characters
+     */
+    private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("^(<t:-?\\d{1,17}(?::[tTdDfFR])?>).*?");
+
+    /**
+     * String formatter templates for each timestamp formatting style
+     *
+     * Relative timestamps aren't effective for in-game messages due to the static nature
+     * of the chat history, so we use a short date-times format (the default style).
+     */
+    private static final Map<TimeFormat, String> TIMESTAMP_FORMATS =
+        Maps.immutableEnumMap(ImmutableMap.<TimeFormat, String>builder()
+            .put(TimeFormat.TIME_SHORT, "%1$tH:%1$tM UTC")
+            .put(TimeFormat.TIME_LONG, "%1$tH:%1$tM:%1$tS UTC")
+            .put(TimeFormat.DATE_SHORT, "%1$te/%1$tm/%1$tY")
+            .put(TimeFormat.DATE_LONG, "%1$te %1$tB %1$tY")
+            .put(TimeFormat.RELATIVE, "%1$te %1$tB %1$tY %1$tH:%1$tM UTC")
+            .put(TimeFormat.DATE_TIME_SHORT, "%1$te %1$tB %1$tY %1$tH:%1$tM UTC")
+            .put(TimeFormat.DATE_TIME_LONG, "%1$tA, %1$te %1$tB %1$tY %1$tH:%1$tM UTC")
+            .build());
 
     private final Message message;
     private final String markdown;
@@ -70,6 +100,29 @@ public class DiscordFormattingConverter {
         } else {
             return false;
         }
+    }
+
+    /**
+     * An implementation of {@link #consume(String)} that matches a given regex pattern
+     * against the start of the remaining markdown, returning the first captured group
+     * and offsetting the cursor by its total length
+     *
+     * @param pattern The pattern to match against
+     * @return The first captured group or null if absent
+     */
+    @Nullable
+    protected String consumeMatching(final Pattern pattern) {
+        final var input = this.markdown.substring(this.cursor);
+        if (input.isEmpty()) { // Nothing to match
+            return null;
+        }
+        final var matcher = pattern.matcher(input);
+        if (matcher.find()) {
+            final var first = matcher.group(1);
+            this.cursor += first.length();
+            return first;
+        }
+        return null;
     }
 
     protected boolean tryMarkdown() {
@@ -168,6 +221,11 @@ public class DiscordFormattingConverter {
                 return true;
             }
         }
+        String result = consumeMatching(TIMESTAMP_PATTERN);
+        if (result != null) {
+            addTimestamp(TimeFormat.parse(result));
+            return true;
+        }
         return false;
     }
 
@@ -196,6 +254,11 @@ public class DiscordFormattingConverter {
         popSimpleText();
         Text userText = discordUserToMinecraft(user, message.getGuild());
         addText(new LiteralText("@").setStyle(userText.getStyle()).append(userText));
+    }
+
+    private void addTimestamp(final Timestamp timestamp) {
+        popSimpleText();
+        addText(discordTimestampToMinecraft(timestamp));
     }
 
     private void addText(Text text) {
@@ -241,6 +304,28 @@ public class DiscordFormattingConverter {
         }
         author.setStyle(style.withHoverEvent(hover).withInsertion(user.getAsMention()));
         return author;
+    }
+
+    /**
+     * Parses the given timestamp markdown into a chat component, with a tooltip
+     * containing the full UTC date and time regardless of the timestamp style,
+     * and an insertion for the original markdown string.
+     *
+     * @param timestamp The timestamp instance
+     * @return A chat component representing the parsed timestamp
+     * @see <a href="https://discord.com/developers/docs/reference#message-formatting">
+     *     discord.com/developers/docs/reference#message-formatting
+     *     </a>
+     */
+    public static Text discordTimestampToMinecraft(final Timestamp timestamp) {
+        // TODO Allow configuration of preferred time zone and hour (24/12) format?
+        final var dateTime = LocalDateTime.ofInstant(timestamp.toInstant(), ZoneOffset.UTC);
+        return new LiteralText("[")
+            .append(TIMESTAMP_FORMATS.get(timestamp.getFormat()).formatted(dateTime))
+            .append("]")
+            .setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new LiteralText(TIMESTAMP_FORMATS.get(TimeFormat.DATE_TIME_SHORT).formatted(dateTime))
+            )).withInsertion(timestamp.toString()));
     }
 
     public static String minecraftToDiscord(Text root) {
