@@ -111,7 +111,7 @@ public class DiscordFormattingConverter {
      * @return The first captured group or null if absent
      */
     @Nullable
-    protected String consumeMatching(final Pattern pattern) {
+    protected String consumeFirst(final Pattern pattern) {
         final var input = this.markdown.substring(this.cursor);
         if (input.isEmpty()) { // Nothing to match
             return null;
@@ -221,7 +221,7 @@ public class DiscordFormattingConverter {
                 return true;
             }
         }
-        String result = consumeMatching(TIMESTAMP_PATTERN);
+        String result = consumeFirst(TIMESTAMP_PATTERN);
         if (result != null) {
             addTimestamp(TimeFormat.parse(result));
             return true;
