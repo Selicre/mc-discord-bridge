@@ -219,19 +219,25 @@ public class DiscordBot extends ListenerAdapter {
         topicNeedsUpdating = false;
 
         TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+        int playerCount = server.getCurrentPlayerCount();
+
         if (chatChannel != null) {
-            String[] playerNames = server.getPlayerNames();
-            if (playerNames.length == 0) {
-                chatChannel.getManager().setTopic("Online!").queue();
-            } else {
+            String topic = "Online!";
+
+            if (playerCount > 0) {
+                String[] playerNames = server.getPlayerNames();
+
                 Arrays.sort(playerNames, String.CASE_INSENSITIVE_ORDER);
-                chatChannel.getManager().setTopic("Online: " + String.join(", ", playerNames)).queue();
+                topic = "Online: " + String.join(", ", playerNames);
             }
+
+            chatChannel.getManager().setTopic(topic).queue();
         }
 
         GuildChannel renameChannel = discord.getGuildChannelById(config.renameChannelId);
+
         if (renameChannel != null) {
-            renameChannel.getManager().setName(String.format(config.renameChannelFormat, server.getCurrentPlayerCount())).queue();
+            renameChannel.getManager().setName(config.getRenameChannelName(playerCount)).queue();
         }
     }
 

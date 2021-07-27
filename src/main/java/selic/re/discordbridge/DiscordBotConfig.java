@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Locale;
 
 @SuppressWarnings("ClassCanBeRecord") // Gson
 public final class DiscordBotConfig {
@@ -51,5 +52,9 @@ public final class DiscordBotConfig {
             }
             return null;
         }
+    }
+
+    public String getRenameChannelName(final int playerCount) {
+        return String.format(Locale.ROOT, this.renameChannelFormat, playerCount);
     }
 }
