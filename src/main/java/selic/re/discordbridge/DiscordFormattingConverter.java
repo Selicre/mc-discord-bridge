@@ -294,11 +294,12 @@ public class DiscordFormattingConverter {
 
     public static Text discordUserToMinecraft(User user, Guild guild) {
         @Nullable final var member = guild.getMember(user);
-        final var component = new LiteralText(member != null ? member.getEffectiveName() : user.getName());
         final var tooltip = new LiteralText(user.getAsTag());
+        var userName = user.getName();
         var style = Style.EMPTY;
 
         if (member != null) {
+            userName = member.getEffectiveName();
             style = style.withColor(member.getColorRaw());
 
             final var roles = Lists.newArrayList(member.getRoles());
@@ -314,7 +315,7 @@ public class DiscordFormattingConverter {
             }
         }
 
-        return component.setStyle(style.withInsertion(user.getAsMention())
+        return new LiteralText(userName).setStyle(style.withInsertion(user.getAsMention())
             .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)));
     }
 
