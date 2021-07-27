@@ -85,21 +85,22 @@ public class DiscordBot extends ListenerAdapter {
         }, 30000, 30000);
     }
 
-    public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
-        final var joined = event.getChannelJoined();
+    @Override
+    public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
+        VoiceChannel joined = event.getChannelJoined();
 
         if (joined != null && joined.getIdLong() == config.voiceChannelId) {
             broadcastUpdate(joined, event.getMember(), "joined");
         }
 
-        final var left = event.getChannelLeft();
+        VoiceChannel left = event.getChannelLeft();
 
         if (left != null && left.getIdLong() == config.voiceChannelId) {
             broadcastUpdate(left, event.getMember(), "left");
         }
     }
 
-    private void broadcastUpdate(final VoiceChannel channel, final Member member, final String action) {
+    private void broadcastUpdate(VoiceChannel channel, Member member, String action) {
         broadcastNoMirror(new LiteralText("")
             .append(discordUserToMinecraft(member.getUser(), member.getGuild()))
             .append(" " + action + " ")
@@ -168,7 +169,7 @@ public class DiscordBot extends ListenerAdapter {
         }
     }
 
-    private static String readableFileSize(final int sizeBytes) {
+    private static String readableFileSize(int sizeBytes) {
         if ((sizeBytes / MB) > 0) { // Size is more than or equal to 1 MB
             return "%s MB".formatted(FILE_SIZE_FORMAT.format(sizeBytes / (double) MB));
         }

@@ -15,12 +15,12 @@ abstract class NetworkHandlerMixin implements EntityTrackingListener, ServerPlay
     @Inject(
         method = "handleMessage(Lnet/minecraft/server/filter/TextStream$Message;)V",
         at = @At("HEAD"), require = 1)
-    private void preMessage(final TextStream.Message message, final CallbackInfo info) {
-        final var str = message.getRaw();
+    private void preMessage(TextStream.Message message, CallbackInfo info) {
+        String str = message.getRaw();
 
         if (!str.startsWith("/")) {
             DiscordBot.getInstance().ifPresent(bot -> {
-                bot.sendChatMessage(this.getPlayer().getGameProfile(), str);
+                bot.sendChatMessage(getPlayer().getGameProfile(), str);
             });
         } else if (str.startsWith("/me ")) {
             /*
@@ -30,7 +30,7 @@ abstract class NetworkHandlerMixin implements EntityTrackingListener, ServerPlay
              That said, it works. For now.
             */
             DiscordBot.getInstance().ifPresent(bot -> {
-                bot.sendEmoteMessage(this.getPlayer().getGameProfile(), str.substring("/me ".length()));
+                bot.sendEmoteMessage(getPlayer().getGameProfile(), str.substring("/me ".length()));
             });
         }
     }

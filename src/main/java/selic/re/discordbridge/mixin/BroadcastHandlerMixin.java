@@ -16,7 +16,7 @@ abstract class BroadcastHandlerMixin {
     @Inject(
         method = "broadcastChatMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/MessageType;Ljava/util/UUID;)V",
         at = @At("HEAD"), require = 1)
-    private void preBroadcastChatMessage(final Text message, final MessageType type, final UUID sender, final CallbackInfo info) {
+    private void preBroadcastChatMessage(Text message, MessageType type, UUID sender, CallbackInfo info) {
         DiscordBot.getInstance().ifPresent(bot -> bot.sendSystemMessage(message));
     }
 }

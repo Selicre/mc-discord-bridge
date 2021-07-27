@@ -6,26 +6,28 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
+import java.nio.file.Path;
 
-public final class DiscordBridgeMod implements ModInitializer {
+public class DiscordBridgeMod implements ModInitializer {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
     public void onInitialize() {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            final var configFile = FabricLoader.getInstance().getConfigDir().resolve("discord-bridge.json");
+            Path configFile = FabricLoader.getInstance().getConfigDir().resolve("discord-bridge.json");
             try {
-                final var config = DiscordBotConfig.fromFile(configFile);
+                @Nullable DiscordBotConfig config = DiscordBotConfig.fromFile(configFile);
                 if (config != null) {
                     DiscordBot.init(config, server);
                 } else {
                     LOGGER.error("A valid token is required in {}", configFile);
                 }
-            } catch (final LoginException e) {
+            } catch (LoginException e) {
                 LOGGER.error("A valid token is required in {}", configFile, e);
-            } catch (final IOException e) {
+            } catch (IOException e) {
                 LOGGER.error("Failed to read config {}", configFile, e);
             }
         });

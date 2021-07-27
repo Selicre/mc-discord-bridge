@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DiscordFormattingConverter {
@@ -120,15 +122,15 @@ public class DiscordFormattingConverter {
      * @return The first captured group or null if absent
      */
     @Nullable
-    protected String consumeFirst(final Pattern pattern) {
-        final var input = this.markdown.substring(this.cursor);
+    protected String consumeFirst(Pattern pattern) {
+        String input = markdown.substring(cursor);
         if (input.isEmpty()) { // Nothing to match
             return null;
         }
-        final var matcher = pattern.matcher(input);
+        Matcher matcher = pattern.matcher(input);
         if (matcher.find()) {
-            final var first = matcher.group(1);
-            this.cursor += first.length();
+            String first = matcher.group(1);
+            cursor += first.length();
             return first;
         }
         return null;
@@ -265,7 +267,7 @@ public class DiscordFormattingConverter {
         addText(new LiteralText("@").setStyle(userText.getStyle()).append(userText));
     }
 
-    private void addTimestamp(final Timestamp timestamp) {
+    private void addTimestamp(Timestamp timestamp) {
         popSimpleText();
         addText(discordTimestampToMinecraft(timestamp));
     }
@@ -278,9 +280,9 @@ public class DiscordFormattingConverter {
         }
     }
 
-    public static Text discordChannelToMinecraft(final GuildChannel channel) {
-        final var name = (channel.getType().isMessage() ? "#" : "") + channel.getName();
-        final var type = CHANNEL_TYPE_STRINGIFIER.apply(channel.getType().name());
+    public static Text discordChannelToMinecraft(GuildChannel channel) {
+        String name = (channel.getType().isMessage() ? "#" : "") + channel.getName();
+        String type = CHANNEL_TYPE_STRINGIFIER.apply(channel.getType().name());
 
         return new LiteralText(name).setStyle(Style.EMPTY.withInsertion(channel.getAsMention())
             .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(type))));
@@ -293,22 +295,22 @@ public class DiscordFormattingConverter {
     }
 
     public static Text discordUserToMinecraft(User user, Guild guild) {
-        @Nullable final var member = guild.getMember(user);
-        final var tooltip = new LiteralText(user.getAsTag());
-        var userName = user.getName();
-        var style = Style.EMPTY;
+        @Nullable Member member = guild.getMember(user);
+        LiteralText tooltip = new LiteralText(user.getAsTag());
+        String userName = user.getName();
+        Style style = Style.EMPTY;
 
         if (member != null) {
             userName = member.getEffectiveName();
             style = style.withColor(member.getColorRaw());
 
-            final var roles = Lists.newArrayList(member.getRoles());
+            List<Role> roles = Lists.newArrayList(member.getRoles());
 
             // Roles are ordered higher value for higher role positioning, so we need to reverse the default
             // comparison order.This is effectively 'comparing(Role::getPosition).reversed()' without boxing
             roles.sort(Comparator.comparingInt(role -> -role.getPosition()));
 
-            for (final var role : roles) {
+            for (Role role : roles) {
                 tooltip.append("\n- ");
                 tooltip.append(new LiteralText(role.getName())
                     .setStyle(Style.EMPTY.withColor(role.getColorRaw())));
@@ -330,9 +332,9 @@ public class DiscordFormattingConverter {
      *     discord.com/developers/docs/reference#message-formatting
      *     </a>
      */
-    public static Text discordTimestampToMinecraft(final Timestamp timestamp) {
+    public static Text discordTimestampToMinecraft(Timestamp timestamp) {
         // TODO Allow configuration of preferred time zone and hour (24/12) format?
-        final var dateTime = LocalDateTime.ofInstant(timestamp.toInstant(), ZoneOffset.UTC);
+        LocalDateTime dateTime = LocalDateTime.ofInstant(timestamp.toInstant(), ZoneOffset.UTC);
         return new LiteralText("[")
             .append(TIMESTAMP_FORMATS.get(timestamp.getFormat()).formatted(dateTime))
             .append("]")

@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import javax.annotation.Nullable;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -12,7 +14,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 
 @SuppressWarnings("ClassCanBeRecord") // Gson
-public final class DiscordBotConfig {
+public class DiscordBotConfig {
     private static final Gson GSON = new GsonBuilder()
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .setLenient()
@@ -26,12 +28,12 @@ public final class DiscordBotConfig {
     public final long voiceChannelId;
 
     public DiscordBotConfig(
-        final String token,
-        final long channelId,
-        final long renameChannelId,
-        final String renameChannelFormat,
-        final String webhookUrl,
-        final long voiceChannelId
+        String token,
+        long channelId,
+        long renameChannelId,
+        String renameChannelFormat,
+        String webhookUrl,
+        long voiceChannelId
     ) {
         this.token = token;
         this.channelId = channelId;
@@ -42,19 +44,19 @@ public final class DiscordBotConfig {
     }
 
     @Nullable
-    public static DiscordBotConfig fromFile(final Path file) throws IOException {
-        try (final var reader = Files.newBufferedReader(file)) {
+    public static DiscordBotConfig fromFile(Path file) throws IOException {
+        try (BufferedReader reader = Files.newBufferedReader(file)) {
             return GSON.fromJson(reader, DiscordBotConfig.class);
-        } catch (final NoSuchFileException e) {
+        } catch (NoSuchFileException e) {
             // Generate a config stub to provide all keys to the end user
-            try (final var writer = Files.newBufferedWriter(file)) {
+            try (BufferedWriter writer = Files.newBufferedWriter(file)) {
                 GSON.toJson(new DiscordBotConfig("", 0L, 0L, "%d player(s) online", "", 0L), writer);
             }
             return null;
         }
     }
 
-    public String getRenameChannelName(final int playerCount) {
-        return String.format(Locale.ROOT, this.renameChannelFormat, playerCount);
+    public String getRenameChannelName(int playerCount) {
+        return String.format(Locale.ROOT, renameChannelFormat, playerCount);
     }
 }
