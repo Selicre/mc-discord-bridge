@@ -1,13 +1,12 @@
 package selic.re.discordbridge;
 
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Converter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -24,6 +23,7 @@ import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -292,16 +292,30 @@ public class DiscordFormattingConverter {
         return converter.root;
     }
 
-    public static LiteralText discordUserToMinecraft(User user, Guild guild) {
-        Member member = guild.getMember(user);
-        LiteralText author = new LiteralText(member == null ? user.getName() : member.getEffectiveName());
-        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(user.getAsTag()));
-        Style style = Style.EMPTY;
+    public static Text discordUserToMinecraft(User user, Guild guild) {
+        @Nullable final var member = guild.getMember(user);
+        final var component = new LiteralText(member != null ? member.getEffectiveName() : user.getName());
+        final var tooltip = new LiteralText(user.getAsTag());
+        var style = Style.EMPTY;
+
         if (member != null) {
             style = style.withColor(member.getColorRaw());
+
+            final var roles = Lists.newArrayList(member.getRoles());
+
+            // Roles are ordered higher value for higher role positioning, so we need to reverse the default
+            // comparison order.This is effectively 'comparing(Role::getPosition).reversed()' without boxing
+            roles.sort(Comparator.comparingInt(role -> -role.getPosition()));
+
+            for (final var role : roles) {
+                tooltip.append("\n- ");
+                tooltip.append(new LiteralText(role.getName())
+                    .setStyle(Style.EMPTY.withColor(role.getColorRaw())));
+            }
         }
-        author.setStyle(style.withHoverEvent(hover).withInsertion(user.getAsMention()));
-        return author;
+
+        return component.setStyle(style.withInsertion(user.getAsMention())
+            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)));
     }
 
     /**
