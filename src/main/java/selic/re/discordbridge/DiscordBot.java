@@ -117,12 +117,13 @@ public class DiscordBot extends ListenerAdapter {
             root.append("<");
             root.append(discordUserToMinecraft(msg.getAuthor(), msg.getGuild()));
 
-            if (msg.getReferencedMessage() != null) {
+            Message refMsg = msg.getReferencedMessage();
+            if (refMsg != null) {
                 MutableText arrow = new LiteralText(" -> ");
-                if (!msg.getReferencedMessage().getContentRaw().isBlank()) {
-                    arrow.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, discordMessageToMinecraft(msg))));
+                if (!refMsg.getContentRaw().isBlank()) {
+                    arrow.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, discordMessageToMinecraft(refMsg))));
                 }
-                root.append(arrow).append(discordUserToMinecraft(msg.getReferencedMessage().getAuthor(), msg.getGuild()));
+                root.append(arrow).append(discordUserToMinecraft(refMsg.getAuthor(), msg.getGuild()));
             }
 
             root.append(">");
