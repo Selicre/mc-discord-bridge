@@ -5,43 +5,32 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import javax.annotation.Nullable;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.Locale;
+import java.util.*;
 
-@SuppressWarnings("ClassCanBeRecord") // Gson
 public class DiscordBotConfig {
     private static final Gson GSON = new GsonBuilder()
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .setLenient()
+        .setPrettyPrinting()
         .create();
 
-    public final String token;
-    public final long channelId;
-    public final long renameChannelId;
-    public final String renameChannelFormat;
-    public final String webhookUrl;
-    public final long voiceChannelId;
+    public String token = "";
+    public String webhookUrl = null;
+    public long channelId = 0;
+    public long renameChannelId = 0;
+    public long voiceChannelId = 0;
+    public boolean updateTopic = false;
+    public ArrayList<Long> botWhitelist = new ArrayList<>();
+    public String renameChannelFormat = "%d player(s) online";
+    public String noPlayersTopicFormat = "Online!";
+    public String withPlayersTopicFormat = "Online: %s";
+    public String avatarUrl = "https://crafatar.com/renders/head/%s?overlay";
 
-    public DiscordBotConfig(
-        String token,
-        long channelId,
-        long renameChannelId,
-        String renameChannelFormat,
-        String webhookUrl,
-        long voiceChannelId
-    ) {
-        this.token = token;
-        this.channelId = channelId;
-        this.renameChannelId = renameChannelId;
-        this.renameChannelFormat = renameChannelFormat;
-        this.webhookUrl = webhookUrl;
-        this.voiceChannelId = voiceChannelId;
-    }
+    public DiscordBotConfig() {}
 
     @Nullable
     public static DiscordBotConfig fromFile(Path file) throws IOException {
@@ -49,8 +38,9 @@ public class DiscordBotConfig {
             return GSON.fromJson(reader, DiscordBotConfig.class);
         } catch (NoSuchFileException e) {
             // Generate a config stub to provide all keys to the end user
+            DiscordBotConfig config = new DiscordBotConfig();
             try (BufferedWriter writer = Files.newBufferedWriter(file)) {
-                GSON.toJson(new DiscordBotConfig("", 0L, 0L, "%d player(s) online", "", 0L), writer);
+                GSON.toJson(config, writer);
             }
             return null;
         }
@@ -58,5 +48,17 @@ public class DiscordBotConfig {
 
     public String getRenameChannelName(int playerCount) {
         return String.format(Locale.ROOT, renameChannelFormat, playerCount);
+    }
+
+    public String getTopicName(String[] players) {
+        String topic = noPlayersTopicFormat;
+        if (players.length > 0) {
+            topic = String.format(Locale.ROOT, withPlayersTopicFormat, String.join(", ", players));
+        }
+        return topic;
+    }
+
+    public String getAvatarUrl(UUID uuid) {
+        return String.format(Locale.ROOT, avatarUrl, uuid.toString());
     }
 }

@@ -13,13 +13,16 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
+import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,7 +31,6 @@ import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -72,7 +74,11 @@ public class DiscordBot extends ListenerAdapter {
         this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES)
             .addEventListeners(this)
             .build();
-        this.webhook = new WebhookClientBuilder(config.webhookUrl).build();
+        if (config.webhookUrl != null) {
+            this.webhook = new WebhookClientBuilder(config.webhookUrl).build();
+        } else {
+            this.webhook = null;
+        }
 
         this.updateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -126,7 +132,8 @@ public class DiscordBot extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
     {
-        if (event.getChannel().getIdLong() == config.channelId && !event.getAuthor().isBot()) {
+        if (event.getChannel().getIdLong() == config.channelId) {
+            if (event.getAuthor().isBot() && !config.botWhitelist.contains(event.getAuthor().getIdLong())) return;
             Message msg = event.getMessage();
             LiteralText root = new LiteralText("");
 
@@ -214,19 +221,29 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     public void sendChatMessage(GameProfile player, String msg) {
-        webhook.send(startWebhook(player).setContent(msg).build());
-    }
-
-    public void sendEmoteMessage(GameProfile player, String msg) {
-        webhook.send(startWebhook(player).setContent("*" + msg + "*").build());
+        if (webhook != null) {
+            webhook.send(startWebhook(player).setContent(msg).build());
+        } else {
+            TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+            if (chatChannel != null) {
+                chatChannel.sendMessage("<" + player.getName() + "> " + msg).queue();
+            }
+        }
     }
 
     public void sendSystemMessage(Text text) {
-        webhook.send(new WebhookMessageBuilder().setContent(minecraftToDiscord(text)).build());
+        if (webhook != null) {
+            webhook.send(new WebhookMessageBuilder().setContent(minecraftToDiscord(text)).build());
+        } else {
+            TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+            if (chatChannel != null) {
+                chatChannel.sendMessage(minecraftToDiscord(text)).queue();
+            }
+        }
     }
 
     protected WebhookMessageBuilder startWebhook(GameProfile player) {
-        String avatar = "https://crafatar.com/renders/head/" + player.getId().toString() + "?overlay";
+        String avatar = config.getAvatarUrl(player.getId());
 
         return new WebhookMessageBuilder().setUsername(player.getName()).setAvatarUrl(avatar);
     }
@@ -236,22 +253,21 @@ public class DiscordBot extends ListenerAdapter {
         topicNeedsUpdating = false;
 
         TextChannel chatChannel = discord.getTextChannelById(config.channelId);
-        int playerCount = server.getCurrentPlayerCount();
 
-        if (chatChannel != null) {
-            String topic = "Online!";
-
-            if (playerCount > 0) {
-                String[] playerNames = server.getPlayerNames();
-
-                Arrays.sort(playerNames, String.CASE_INSENSITIVE_ORDER);
-                topic = "Online: " + String.join(", ", playerNames);
-            }
-
-            chatChannel.getManager().setTopic(topic).queue();
+        if (chatChannel != null && config.updateTopic) {
+            String topic = config.getTopicName(server.getPlayerNames());
+            chatChannel.getManager().setTopic(topic).queue(
+                null,
+                new ErrorHandler().handle(ErrorResponse.MISSING_PERMISSIONS, c -> {
+                    LogManager.getLogger().warn("Missing permissions to change channel info!");
+                    // Don't try again
+                    config.updateTopic = false;
+                })
+            );
         }
 
         GuildChannel renameChannel = discord.getGuildChannelById(config.renameChannelId);
+        int playerCount = server.getCurrentPlayerCount();
 
         if (renameChannel != null) {
             renameChannel.getManager().setName(config.getRenameChannelName(playerCount)).queue();

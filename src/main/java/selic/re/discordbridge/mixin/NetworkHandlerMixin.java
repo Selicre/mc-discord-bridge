@@ -30,7 +30,7 @@ abstract class NetworkHandlerMixin implements EntityTrackingListener, ServerPlay
              That said, it works. For now.
             */
             DiscordBot.getInstance().ifPresent(bot -> {
-                bot.sendEmoteMessage(getPlayer().getGameProfile(), str.substring("/me ".length()));
+                bot.sendChatMessage(getPlayer().getGameProfile(), "*" + str.substring("/me ".length()) + "*");
             });
         }
     }
