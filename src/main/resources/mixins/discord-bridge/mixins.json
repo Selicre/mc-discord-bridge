@@ -5,8 +5,7 @@
   "package": "selic.re.discordbridge.mixin",
   "mixins": [
     "BroadcastHandlerMixin",
-    "NetworkHandlerMixin",
-    "PlayerManagerMixin"
+    "NetworkHandlerMixin"
   ],
   "refmap": "mixins/discord-bridge/refmap.json"
 }
