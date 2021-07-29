@@ -11,11 +11,16 @@ The config goes in `config/discord-bridge.json` and contains these keys:
 ```
 {
   "token": "insert-bot-token-here",
-  "channel_id": 123123123123123,
   "webhook_url": "insert-webhook-url-here",
+  "channel_id": 0,
   "rename_channel_id": 0,
+  "voice_channel_id": 0,
+  "update_topic": false,
+  "bot_whitelist": [],
   "rename_channel_format": "%d player(s) online",
-  "voice_channel_id": 0
+  "no_players_topic_format": "Online!",
+  "with_players_topic_format": "Online: %s",
+  "avatar_url": "https://crafatar.com/renders/head/%s?overlay"
 }
 ```
 
