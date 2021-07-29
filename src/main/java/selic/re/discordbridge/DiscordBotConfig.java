@@ -37,6 +37,7 @@ public class DiscordBotConfig {
     @JsonAdapter(LongSetDeserializer.class)
     public LongSet voiceChannels = LongSets.EMPTY_SET;
     public boolean updateTopic = false;
+    public boolean listDiscordUsers = false;
     @JsonAdapter(LongSetDeserializer.class)
     public LongSet botWhitelist = LongSets.EMPTY_SET;
     public String renameChannelFormat = "%d player(s) online";

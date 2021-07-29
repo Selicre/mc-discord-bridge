@@ -36,18 +36,19 @@ abstract class PlayerManagerMixin {
 
         DiscordBot instance = DiscordBot.getInstance().get();
         instance.onPlayersChanged();
-
-        for (Member member : instance.getChannelMembers()) {
-            String name = "@" + member.getUser().getName();
-            if (name.length() > 16 || member.getUser().isBot()) {
-                continue;
+        if (instance.getConfig().listDiscordUsers) {
+            for (Member member : instance.getChannelMembers()) {
+                String name = "@" + member.getUser().getName();
+                if (name.length() > 16 || member.getUser().isBot()) {
+                    continue;
+                }
+                PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER);
+                GameProfile profile = new GameProfile(PlayerEntity.getOfflinePlayerUuid(member.getId()), name);
+                int latency = member.getOnlineStatus() == OnlineStatus.OFFLINE ? -1 : 10000;
+                Text displayName = DiscordFormattingConverter.discordUserToMinecraft(member.getUser(), member.getGuild(), false);
+                packet.getEntries().add(new PlayerListS2CPacket.Entry(profile, latency, GameMode.SPECTATOR, displayName));
+                connection.send(packet);
             }
-            PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER);
-            GameProfile profile = new GameProfile(PlayerEntity.getOfflinePlayerUuid(member.getId()), name);
-            int latency = member.getOnlineStatus() == OnlineStatus.OFFLINE ? -1 : 10000;
-            Text displayName = DiscordFormattingConverter.discordUserToMinecraft(member.getUser(), member.getGuild(), false);
-            packet.getEntries().add(new PlayerListS2CPacket.Entry(profile, latency, GameMode.SPECTATOR, displayName));
-            connection.send(packet);
         }
     }
 }

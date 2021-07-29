@@ -30,6 +30,7 @@ import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
 import java.text.DecimalFormat;
 import java.time.Duration;
@@ -300,5 +301,9 @@ public class DiscordBot extends ListenerAdapter {
         }
 
         return new ArrayList<>();
+    }
+
+    public DiscordBotConfig getConfig() {
+        return this.config;
     }
 }
