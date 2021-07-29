@@ -8,6 +8,9 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongSets;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
@@ -31,10 +34,11 @@ public class DiscordBotConfig {
     public String webhookUrl = null;
     public long channelId = 0;
     public long renameChannelId = 0;
-    @JsonAdapter(VoiceChannels.class)
-    public long[] voiceChannels = {};
+    @JsonAdapter(LongSetDeserializer.class)
+    public LongSet voiceChannels = LongSets.EMPTY_SET;
     public boolean updateTopic = false;
-    public ArrayList<Long> botWhitelist = new ArrayList<>();
+    @JsonAdapter(LongSetDeserializer.class)
+    public LongSet botWhitelist = LongSets.EMPTY_SET;
     public String renameChannelFormat = "%d player(s) online";
     public String noPlayersTopicFormat = "Online!";
     public String withPlayersTopicFormat = "Online: %s";
@@ -73,27 +77,20 @@ public class DiscordBotConfig {
     }
 
     public boolean hasVoiceChannel(@Nullable VoiceChannel channel) {
-        if (channel != null) {
-            for (long snowflake : voiceChannels) {
-                if (snowflake == channel.getIdLong()) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return channel != null && voiceChannels.contains(channel.getIdLong());
     }
 
     public boolean allowsMessagesFrom(MessageChannel channel, User user) {
         return channelId == channel.getIdLong() && (!user.isBot() || botWhitelist.contains(user.getIdLong()));
     }
 
-    private static final class VoiceChannels implements JsonDeserializer<long[]> {
+    private static final class LongSetDeserializer implements JsonDeserializer<LongSet> {
         @Override
-        public long[] deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        public LongSet deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             if (json.isJsonPrimitive()) { // Backwards compatibility
-                return new long[] { context.<Long>deserialize(json, long.class) };
+                return LongSets.singleton(context.<Long>deserialize(json, long.class));
             }
-            return context.deserialize(json, long[].class);
+            return new LongOpenHashSet(context.<long[]>deserialize(json, long[].class));
         }
     }
 }
