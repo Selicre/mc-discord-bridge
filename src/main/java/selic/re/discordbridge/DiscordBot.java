@@ -109,14 +109,15 @@ public class DiscordBot extends ListenerAdapter {
     @Override
     public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
         VoiceChannel joined = event.getChannelJoined();
-
-        if (joined != null && joined.getIdLong() == config.voiceChannelId) {
-            broadcastUpdate(joined, event.getMember(), "joined");
-        }
-
         VoiceChannel left = event.getChannelLeft();
+        boolean broadcastJoined = config.hasVoiceChannel(joined);
+        boolean broadcastLeft = config.hasVoiceChannel(left);
 
-        if (left != null && left.getIdLong() == config.voiceChannelId) {
+        if (broadcastLeft && broadcastJoined) {
+            broadcastUpdate(joined, event.getMember(), "moved to");
+        } else if (broadcastJoined) {
+            broadcastUpdate(joined, event.getMember(), "joined");
+        } else if (broadcastLeft) {
             broadcastUpdate(left, event.getMember(), "left");
         }
     }

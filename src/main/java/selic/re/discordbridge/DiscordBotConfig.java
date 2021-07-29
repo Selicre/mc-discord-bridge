@@ -3,9 +3,19 @@ package selic.re.discordbridge;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.annotations.JsonAdapter;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongSets;
+import net.dv8tion.jda.api.entities.VoiceChannel;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -22,7 +32,8 @@ public class DiscordBotConfig {
     public String webhookUrl = null;
     public long channelId = 0;
     public long renameChannelId = 0;
-    public long voiceChannelId = 0;
+    @JsonAdapter(VoiceChannels.class)
+    public long[] voiceChannels = {};
     public boolean updateTopic = false;
     public ArrayList<Long> botWhitelist = new ArrayList<>();
     public String renameChannelFormat = "%d player(s) online";
@@ -60,5 +71,26 @@ public class DiscordBotConfig {
 
     public String getAvatarUrl(UUID uuid) {
         return String.format(Locale.ROOT, avatarUrl, uuid.toString());
+    }
+
+    public boolean hasVoiceChannel(@Nullable VoiceChannel channel) {
+        if (channel != null) {
+            for (long snowflake : voiceChannels) {
+                if (snowflake == channel.getIdLong()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static final class VoiceChannels implements JsonDeserializer<long[]> {
+        @Override
+        public long[] deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            if (json.isJsonPrimitive()) { // Backwards compatibility
+                return new long[] { context.<Long>deserialize(json, long.class) };
+            }
+            return context.deserialize(json, long[].class);
+        }
     }
 }
