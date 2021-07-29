@@ -1,5 +1,6 @@
 package selic.re.discordbridge;
 
+import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.minecraft.text.LiteralText;
@@ -10,10 +11,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static selic.re.discordbridge.DiscordFormattingConverter.discordEmoteToMinecraft;
 import static selic.re.discordbridge.DiscordFormattingConverter.discordUserToMinecraft;
 
 public class GameMessageConverter {
     private static final Pattern DISCORD_MENTION_PATTERN = Pattern.compile("^.{2,32}?#\\d{4}");
+    private static final Pattern DISCORD_EMOJI_PATTERN = Pattern.compile("^:([\\w_]{2,}):");
     private static final int DISCORD_USERNAME_MAX_LENGTH = 32;
     private static final int DISCORD_USERNAME_MIN_LENGTH = 2;
 
@@ -61,6 +64,7 @@ public class GameMessageConverter {
     private void readToEnd() {
         while (!isEOF()) {
             if (tryUserMention()) continue;
+            if (tryEmoteMention()) continue;
             textBuffer.append(read());
         }
         flushTextBuffer();
@@ -106,10 +110,31 @@ public class GameMessageConverter {
         return false;
     }
 
+    private boolean tryEmoteMention() {
+        Matcher matcher = DISCORD_EMOJI_PATTERN.matcher(input.substring(cursor));
+        if (matcher.find()) {
+            // Try to find something case sensitive before checking insensitive.
+            List<Emote> emotes = channel.getGuild().getEmotesByName(matcher.group(1), false);
+            if (emotes.isEmpty()) {
+                emotes = channel.getGuild().getEmotesByName(matcher.group(1), true);
+            }
+            if (!emotes.isEmpty()) {
+                insertEmote(emotes.get(0));
+            }
+        }
+        return false;
+    }
+
     private void insertMention(Member member) {
         flushTextBuffer();
         discordOutput.append(member.getAsMention());
         gameOutput.append(discordUserToMinecraft(member.getUser(), member.getGuild(), true));
+    }
+
+    private void insertEmote(Emote emote) {
+        flushTextBuffer();
+        discordOutput.append(emote.getAsMention());
+        gameOutput.append(discordEmoteToMinecraft(emote));
     }
 
     private void flushTextBuffer() {

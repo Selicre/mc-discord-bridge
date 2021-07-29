@@ -253,12 +253,8 @@ public class DiscordFormattingConverter {
     }
 
     private void addEmoteMention(Emote emote) {
-        LiteralText text = new LiteralText(":" + emote.getName() + ":");
-        ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, emote.getImageUrl());
-        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(emote.getGuild() == null ? "Emote" : "Emote from " + emote.getGuild().getName()));
-        text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover).withInsertion(emote.getAsMention()));
         popSimpleText();
-        addText(text);
+        addText(discordEmoteToMinecraft(emote));
     }
 
     private void addUserMention(User user) {
@@ -292,6 +288,14 @@ public class DiscordFormattingConverter {
         DiscordFormattingConverter converter = new DiscordFormattingConverter(message);
         converter.readToEnd();
         return converter.root;
+    }
+
+    public static LiteralText discordEmoteToMinecraft(Emote emote) {
+        LiteralText text = new LiteralText(":" + emote.getName() + ":");
+        ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, emote.getImageUrl());
+        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(emote.getGuild() == null ? "Emote" : "Emote from " + emote.getGuild().getName()));
+        text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover).withInsertion(":" + emote.getName() + ":"));
+        return text;
     }
 
     public static Text discordUserToMinecraft(User user, Guild guild, boolean asMention) {
