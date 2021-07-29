@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -94,20 +93,6 @@ public class DiscordBot extends ListenerAdapter {
                 });
             }
         }, 30000, 30000);
-
-        ServerTickEvents.END_SERVER_TICK.register(new ServerTickEvents.EndTick() {
-            private int lastPlayerCount = 0;
-
-            @Override
-            public void onEndTick(MinecraftServer server) {
-                int playerCount = server.getCurrentPlayerCount();
-
-                if (playerCount != lastPlayerCount) {
-                    onPlayersChanged();
-                    lastPlayerCount = playerCount;
-                }
-            }
-        });
     }
 
     @Override
@@ -314,7 +299,7 @@ public class DiscordBot extends ListenerAdapter {
         }
     }
 
-    private void onPlayersChanged() {
+    public void onPlayersChanged() {
         if (Instant.now().isBefore(nextTopicUpdateTime)) {
             // We're going to be rate limited, so let the timer adjust it when we're free.
             topicNeedsUpdating = true;
