@@ -8,9 +8,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.longs.LongSets;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 
 import javax.annotation.Nullable;
