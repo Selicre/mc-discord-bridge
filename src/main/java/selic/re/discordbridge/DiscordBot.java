@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -21,7 +20,12 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.*;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nonnull;
@@ -37,10 +41,12 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static selic.re.discordbridge.DiscordFormattingConverter.*;
+import static selic.re.discordbridge.DiscordFormattingConverter.discordChannelToMinecraft;
+import static selic.re.discordbridge.DiscordFormattingConverter.discordMessageToMinecraft;
+import static selic.re.discordbridge.DiscordFormattingConverter.discordUserToMinecraft;
+import static selic.re.discordbridge.DiscordFormattingConverter.minecraftToDiscord;
+import static selic.re.discordbridge.GameMessageConverter.convertGameMessage;
 
 public class DiscordBot extends ListenerAdapter {
     // Discord... please :(
@@ -48,6 +54,7 @@ public class DiscordBot extends ListenerAdapter {
 
     // Unlike %.2f, a decimal format will omit redundant trailing zeros, e.g 10.00 MB -> 10 MB
     private static final DecimalFormat FILE_SIZE_FORMAT = new DecimalFormat("#.##");
+
 
     // Decimal conversions rather than binary
     private static final int KB = 1000;
@@ -62,7 +69,6 @@ public class DiscordBot extends ListenerAdapter {
     private boolean topicNeedsUpdating = true;
     MinecraftServer server;
     DiscordBotConfig config;
-    public static final Pattern DISCORD_MENTION_PATTERN = Pattern.compile("@(.+?#\\d{4})");
 
     public static void init(DiscordBotConfig config, MinecraftServer server) throws LoginException {
         INSTANCE = new DiscordBot(config, server);
@@ -217,34 +223,9 @@ public class DiscordBot extends ListenerAdapter {
             return new LiteralText(message);
         }
 
-        StringBuilder discordMessage = new StringBuilder("");
-        LiteralText gameMessage = new LiteralText("");
-        Matcher matcher = DISCORD_MENTION_PATTERN.matcher(message);
-        int lastText = 0;
-
-        while (matcher.find()) {
-            User user = discord.getUserByTag(matcher.group(1));
-            if (user == null) {
-                continue;
-            }
-
-            if (lastText < matcher.start()) {
-                discordMessage.append(message, lastText, matcher.start());
-                gameMessage.append(message.substring(lastText, matcher.start()));
-            }
-            lastText = matcher.end();
-
-            discordMessage.append(user.getAsMention());
-            gameMessage.append(discordUserToMinecraft(user, chatChannel.getGuild(), true));
-        }
-
-        if (lastText < message.length()) {
-            discordMessage.append(message.substring(lastText));
-            gameMessage.append(message.substring(lastText));
-        }
-
-        sendChatMessage(author, discordMessage.toString());
-        return gameMessage;
+        GameMessageConverter.Results results = convertGameMessage(message, chatChannel);
+        sendChatMessage(author, results.discordOutput);
+        return results.gameOutput;
     }
 
     public void sendChatMessage(GameProfile player, String msg) {
