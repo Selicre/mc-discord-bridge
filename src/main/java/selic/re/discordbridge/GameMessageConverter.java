@@ -1,5 +1,6 @@
 package selic.re.discordbridge;
 
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -25,21 +26,23 @@ public class GameMessageConverter {
     private final LiteralText gameOutput;
     private final StringBuilder discordOutput;
     private final TextChannel channel;
+    private final JDA discord;
     private int cursor;
     private final StringBuilder textBuffer = new StringBuilder();
 
     @Nullable
     private List<Member> mentionableMembers = null;
 
-    protected GameMessageConverter(String input, TextChannel channel) {
+    protected GameMessageConverter(String input, TextChannel channel, JDA discord) {
         this.input = input;
         this.channel = channel;
+        this.discord = discord;
         this.gameOutput = new LiteralText("");
         this.discordOutput = new StringBuilder();
     }
 
-    public static Results convertGameMessage(String input, TextChannel channel) {
-        GameMessageConverter converter = new GameMessageConverter(input, channel);
+    public static Results convertGameMessage(String input, TextChannel channel, JDA discord) {
+        GameMessageConverter converter = new GameMessageConverter(input, channel, discord);
         converter.readToEnd();
         return new Results(converter.gameOutput, converter.discordOutput.toString());
     }
@@ -114,12 +117,14 @@ public class GameMessageConverter {
         Matcher matcher = DISCORD_EMOJI_PATTERN.matcher(input.substring(cursor));
         if (matcher.find()) {
             // Try to find something case sensitive before checking insensitive.
-            List<Emote> emotes = channel.getGuild().getEmotesByName(matcher.group(1), false);
+            List<Emote> emotes = discord.getEmotesByName(matcher.group(1), false);
             if (emotes.isEmpty()) {
-                emotes = channel.getGuild().getEmotesByName(matcher.group(1), true);
+                emotes = discord.getEmotesByName(matcher.group(1), true);
             }
             if (!emotes.isEmpty()) {
+                cursor += matcher.end();
                 insertEmote(emotes.get(0));
+                return true;
             }
         }
         return false;

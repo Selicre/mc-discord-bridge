@@ -82,7 +82,7 @@ public class DiscordBot extends ListenerAdapter {
     DiscordBot(DiscordBotConfig config, MinecraftServer server) throws LoginException {
         this.server = server;
         this.config = config;
-        this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES)
+        this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_EMOJIS)
             .addEventListeners(this)
             .build();
         if (config.webhookUrl != null) {
@@ -223,7 +223,7 @@ public class DiscordBot extends ListenerAdapter {
             return new LiteralText(message);
         }
 
-        GameMessageConverter.Results results = convertGameMessage(message, chatChannel);
+        GameMessageConverter.Results results = convertGameMessage(message, chatChannel, discord);
         sendChatMessage(author, results.discordOutput);
         return results.gameOutput;
     }
