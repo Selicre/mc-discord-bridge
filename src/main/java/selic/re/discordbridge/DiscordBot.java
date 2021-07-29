@@ -31,6 +31,8 @@ import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -308,5 +310,14 @@ public class DiscordBot extends ListenerAdapter {
 
         // We haven't updated the topic in a while, so let's do it immediately.
         updateChannels();
+    }
+
+    public List<Member> getChannelMembers() {
+        TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+        if (chatChannel != null) {
+            return chatChannel.getMembers();
+        }
+
+        return new ArrayList<>();
     }
 }

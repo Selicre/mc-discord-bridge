@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import selic.re.discordbridge.DiscordBot;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Mixin(ServerPlayNetworkHandler.class)
