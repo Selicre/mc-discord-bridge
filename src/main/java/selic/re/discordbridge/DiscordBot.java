@@ -133,8 +133,7 @@ public class DiscordBot extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event)
     {
-        if (event.getChannel().getIdLong() == config.channelId) {
-            if (event.getAuthor().isBot() && !config.botWhitelist.contains(event.getAuthor().getIdLong())) return;
+        if (config.allowsMessagesFrom(event.getChannel(), event.getAuthor())) {
             Message msg = event.getMessage();
             LiteralText root = new LiteralText("");
 

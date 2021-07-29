@@ -8,6 +8,8 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 
 import javax.annotation.Nullable;
@@ -79,6 +81,10 @@ public class DiscordBotConfig {
             }
         }
         return false;
+    }
+
+    public boolean allowsMessagesFrom(MessageChannel channel, User user) {
+        return channelId == channel.getIdLong() && (!user.isBot() || botWhitelist.contains(user.getIdLong()));
     }
 
     private static final class VoiceChannels implements JsonDeserializer<long[]> {
