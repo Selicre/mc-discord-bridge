@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -35,6 +36,8 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static selic.re.discordbridge.DiscordFormattingConverter.*;
 
@@ -58,6 +61,7 @@ public class DiscordBot extends ListenerAdapter {
     private boolean topicNeedsUpdating = true;
     MinecraftServer server;
     DiscordBotConfig config;
+    public static final Pattern DISCORD_MENTION_PATTERN = Pattern.compile("@(.+?#\\d{4})");
 
     public static void init(DiscordBotConfig config, MinecraftServer server) throws LoginException {
         INSTANCE = new DiscordBot(config, server);
@@ -124,7 +128,7 @@ public class DiscordBot extends ListenerAdapter {
 
     private void broadcastUpdate(VoiceChannel channel, Member member, String action) {
         broadcastNoMirror(new LiteralText("")
-            .append(discordUserToMinecraft(member.getUser(), member.getGuild()))
+            .append(discordUserToMinecraft(member.getUser(), member.getGuild(), false))
             .append(" " + action + " ")
             .append(discordChannelToMinecraft(channel))
             .append(" (" + channel.getMembers().size() + " users connected)"));
@@ -138,7 +142,7 @@ public class DiscordBot extends ListenerAdapter {
             LiteralText root = new LiteralText("");
 
             root.append("<");
-            root.append(discordUserToMinecraft(msg.getAuthor(), msg.getGuild()));
+            root.append(discordUserToMinecraft(msg.getAuthor(), msg.getGuild(), false));
 
             Message refMsg = msg.getReferencedMessage();
             if (refMsg != null) {
@@ -146,7 +150,7 @@ public class DiscordBot extends ListenerAdapter {
                 if (!refMsg.getContentRaw().isBlank()) {
                     arrow.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, discordMessageToMinecraft(refMsg))));
                 }
-                root.append(arrow).append(discordUserToMinecraft(refMsg.getAuthor(), msg.getGuild()));
+                root.append(arrow).append(discordUserToMinecraft(refMsg.getAuthor(), msg.getGuild(), false));
             }
 
             root.append(">");
@@ -218,6 +222,42 @@ public class DiscordBot extends ListenerAdapter {
         for (ServerPlayerEntity serverPlayerEntity : server.getPlayerManager().getPlayerList()) {
             serverPlayerEntity.sendMessage(message, type, sender);
         }
+    }
+
+    public Text broadcastAndReplaceChatMessage(GameProfile author, String message) {
+        TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+        if (chatChannel == null) {
+            return new LiteralText(message);
+        }
+
+        StringBuilder discordMessage = new StringBuilder("");
+        LiteralText gameMessage = new LiteralText("");
+        Matcher matcher = DISCORD_MENTION_PATTERN.matcher(message);
+        int lastText = 0;
+
+        while (matcher.find()) {
+            User user = discord.getUserByTag(matcher.group(1));
+            if (user == null) {
+                continue;
+            }
+
+            if (lastText < matcher.start()) {
+                discordMessage.append(message, lastText, matcher.start());
+                gameMessage.append(message.substring(lastText, matcher.start()));
+            }
+            lastText = matcher.end();
+
+            discordMessage.append(user.getAsMention());
+            gameMessage.append(discordUserToMinecraft(user, chatChannel.getGuild(), true));
+        }
+
+        if (lastText < message.length()) {
+            discordMessage.append(message.substring(lastText));
+            gameMessage.append(message.substring(lastText));
+        }
+
+        sendChatMessage(author, discordMessage.toString());
+        return gameMessage;
     }
 
     public void sendChatMessage(GameProfile player, String msg) {

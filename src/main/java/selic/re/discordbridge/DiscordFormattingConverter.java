@@ -263,7 +263,7 @@ public class DiscordFormattingConverter {
 
     private void addUserMention(User user) {
         popSimpleText();
-        Text userText = discordUserToMinecraft(user, message.getGuild());
+        Text userText = discordUserToMinecraft(user, message.getGuild(), true);
         addText(new LiteralText("@").setStyle(userText.getStyle()).append(userText));
     }
 
@@ -294,7 +294,7 @@ public class DiscordFormattingConverter {
         return converter.root;
     }
 
-    public static Text discordUserToMinecraft(User user, Guild guild) {
+    public static Text discordUserToMinecraft(User user, Guild guild, boolean asMention) {
         @Nullable Member member = guild.getMember(user);
         LiteralText tooltip = new LiteralText(user.getAsTag());
         String userName = user.getName();
@@ -317,7 +317,11 @@ public class DiscordFormattingConverter {
             }
         }
 
-        return new LiteralText(userName).setStyle(style.withInsertion(user.getAsMention())
+        if (asMention) {
+            userName = "@" + userName;
+        }
+
+        return new LiteralText(userName).setStyle(style.withInsertion("@" + user.getAsTag())
             .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)));
     }
 
