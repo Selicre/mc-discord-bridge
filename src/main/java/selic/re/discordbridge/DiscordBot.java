@@ -75,7 +75,7 @@ public class DiscordBot extends ListenerAdapter {
             .addEventListeners(this)
             .build();
         if (config.webhookUrl != null) {
-            this.webhook = new WebhookClientBuilder(config.webhookUrl).build();
+            this.webhook = new WebhookClientBuilder(config.webhookUrl).setWait(false).build();
         } else {
             this.webhook = null;
         }
