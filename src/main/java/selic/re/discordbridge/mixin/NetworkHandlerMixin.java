@@ -39,8 +39,11 @@ abstract class NetworkHandlerMixin implements EntityTrackingListener, ServerPlay
     @ModifyVariable(method = "handleMessage(Lnet/minecraft/server/filter/TextStream$Message;)V", at = @At("STORE"), ordinal = 1)
     private Text replaceRawChatInput(Text original) {
         Optional<DiscordBot> bot = DiscordBot.getInstance();
-        if (bot.isPresent() && original instanceof TranslatableText translatableText && translatableText.getArgs().length == 2 && translatableText.getArgs()[0] instanceof Text author && translatableText.getArgs()[1] instanceof String message) {
-            return new TranslatableText("chat.type.text", author, bot.get().broadcastAndReplaceChatMessage(getPlayer().getGameProfile(), message));
+        if (bot.isPresent() && (original instanceof TranslatableText text) && (text.getArgs().length == 2)) {
+            if ((text.getArgs()[0] instanceof Text author) && (text.getArgs()[1] instanceof String message)) {
+                Text messageText = bot.get().broadcastAndReplaceChatMessage(getPlayer().getGameProfile(), message);
+                return new TranslatableText("chat.type.text", author, messageText);
+            }
         }
         return original;
     }
