@@ -68,7 +68,8 @@ public class DiscordBotConfig {
     public String getTopicName(String[] players) {
         String topic = noPlayersTopicFormat;
         if (players.length > 0) {
-            topic = String.format(Locale.ROOT, withPlayersTopicFormat, String.join(", ", players));
+            Arrays.sort(players, String.CASE_INSENSITIVE_ORDER);
+            topic = String.format(Locale.ROOT, withPlayersTopicFormat, players);
         }
         return topic;
     }
