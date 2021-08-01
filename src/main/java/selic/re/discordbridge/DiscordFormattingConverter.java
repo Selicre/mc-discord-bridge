@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import net.dv8tion.jda.api.utils.Timestamp;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.LiteralText;
@@ -28,7 +29,9 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -303,6 +306,22 @@ public class DiscordFormattingConverter {
         LiteralText tooltip = new LiteralText(user.getAsTag());
         String userName = user.getName();
         Style style = Style.EMPTY;
+        boolean online = false;
+
+        if (DiscordBot.getInstance().isPresent()) {
+            DiscordBot bot = DiscordBot.getInstance().get();
+            ServerPlayerEntity player = bot.getPlayer(user);
+            if (player != null) {
+                style = style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tell " + player.getGameProfile().getName() + " "));
+                online = true;
+            }
+        }
+
+        if (online) {
+            tooltip.append("\nIn-game");
+        } else {
+            tooltip.append("\nOn Discord");
+        }
 
         if (member != null) {
             userName = member.getEffectiveName();

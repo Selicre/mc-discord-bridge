@@ -6,6 +6,7 @@ import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
@@ -77,6 +78,7 @@ public class DiscordBot extends ListenerAdapter {
     private final Timer updateTimer = new Timer();
     private Instant nextTopicUpdateTime = Instant.now();
     private boolean topicNeedsUpdating = true;
+    private Guild guild;
     MinecraftServer server;
     DiscordBotConfig config;
 
@@ -291,12 +293,15 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     public void sendChatMessage(GameProfile player, String msg) {
+        Member member = playerLookup.getDiscordMember(getGuild(), player);
+        String name = member != null ? member.getEffectiveName() : player.getName();
+
         if (webhook != null) {
-            webhook.send(startWebhook(player).setContent(msg).build());
+            webhook.send(startWebhook(player.getId(), name).setContent(msg).build());
         } else {
             TextChannel chatChannel = discord.getTextChannelById(config.channelId);
             if (chatChannel != null) {
-                chatChannel.sendMessage("<" + player.getName() + "> " + msg).queue();
+                chatChannel.sendMessage("<" + name + "> " + msg).queue();
             }
         }
     }
@@ -312,10 +317,10 @@ public class DiscordBot extends ListenerAdapter {
         }
     }
 
-    protected WebhookMessageBuilder startWebhook(GameProfile player) {
-        String avatar = config.getAvatarUrl(player.getId());
+    protected WebhookMessageBuilder startWebhook(UUID id, String name) {
+        String avatar = config.getAvatarUrl(id);
 
-        return new WebhookMessageBuilder().setUsername(player.getName()).setAvatarUrl(avatar);
+        return new WebhookMessageBuilder().setUsername(name).setAvatarUrl(avatar);
     }
 
     private void updateChannels() {
@@ -369,20 +374,39 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     public boolean isOnline(User discordUser) {
+        return getPlayer(discordUser) != null;
+    }
+
+    @Nullable
+    public ServerPlayerEntity getPlayer(User discordUser) {
         UUID id = playerLookup.getPlayerProfileId(discordUser);
         if (id == null) {
-            return false;
+            return null;
         }
-        return server.getPlayerManager().getPlayer(id) != null;
+        return server.getPlayerManager().getPlayer(id);
     }
 
     public void onPlayerConnected(GameProfile profile) {
-        TextChannel chatChannel = discord.getTextChannelById(config.channelId);
-        if (chatChannel != null) {
-            Member member = playerLookup.getDiscordMember(chatChannel.getGuild(), profile);
+        Guild guild = getGuild();
+        if (guild != null) {
+            Member member = playerLookup.getDiscordMember(guild, profile);
             if (member != null) {
                 announcePossibleStream(member.getVoiceState());
             }
         }
+    }
+
+    public DiscordPlayerLookup getLookup() {
+        return playerLookup;
+    }
+
+    public Guild getGuild() {
+        if (guild == null) {
+            TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+            if (chatChannel != null) {
+                this.guild = chatChannel.getGuild();
+            }
+        }
+        return guild;
     }
 }

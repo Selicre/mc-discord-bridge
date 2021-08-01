@@ -6,6 +6,7 @@
   "mixins": [
     "BroadcastHandlerMixin",
     "NetworkHandlerMixin",
+    "PlayerEntityMixin",
     "PlayerManagerMixin"
   ],
   "refmap": "mixins/discord-bridge/refmap.json"
