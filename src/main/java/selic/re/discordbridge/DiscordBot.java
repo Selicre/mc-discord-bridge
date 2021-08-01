@@ -6,11 +6,7 @@ import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.GuildChannel;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
@@ -20,33 +16,19 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.util.*;
 
-import static selic.re.discordbridge.DiscordFormattingConverter.discordChannelToMinecraft;
-import static selic.re.discordbridge.DiscordFormattingConverter.discordMessageToMinecraft;
-import static selic.re.discordbridge.DiscordFormattingConverter.discordUserToMinecraft;
-import static selic.re.discordbridge.DiscordFormattingConverter.minecraftToDiscord;
+import static selic.re.discordbridge.DiscordFormattingConverter.*;
 import static selic.re.discordbridge.GameMessageConverter.convertGameMessage;
 
 public class DiscordBot extends ListenerAdapter {
@@ -72,12 +54,20 @@ public class DiscordBot extends ListenerAdapter {
     DiscordBotConfig config;
 
     public static void init(DiscordBotConfig config, MinecraftServer server) throws LoginException {
+        if (INSTANCE != null) {
+            // destroy discord bot instance
+            INSTANCE.discord.shutdownNow();
+        }
         INSTANCE = new DiscordBot(config, server);
+    }
+
+    public boolean getStatus() {
+        return discord.getStatus().isInit();
     }
 
     @Nonnull
     public static Optional<DiscordBot> getInstance() {
-        return Optional.of(INSTANCE);
+        return Optional.ofNullable(INSTANCE);
     }
 
     DiscordBot(DiscordBotConfig config, MinecraftServer server) throws LoginException {

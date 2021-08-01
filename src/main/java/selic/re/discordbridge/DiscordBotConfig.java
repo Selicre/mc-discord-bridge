@@ -1,12 +1,6 @@
 package selic.re.discordbridge;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -14,14 +8,23 @@ import it.unimi.dsi.fastutil.longs.LongSets;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.MinecraftServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
-import java.io.*;
+import javax.security.auth.login.LoginException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.UUID;
 
 public class DiscordBotConfig {
     private static final Gson GSON = new GsonBuilder()
@@ -29,6 +32,7 @@ public class DiscordBotConfig {
         .setLenient()
         .setPrettyPrinting()
         .create();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public String token = "";
     public String webhookUrl = null;
@@ -58,6 +62,26 @@ public class DiscordBotConfig {
                 GSON.toJson(config, writer);
             }
             return null;
+        }
+    }
+
+    public static int performInit(MinecraftServer server) {
+        Path configFile = FabricLoader.getInstance().getConfigDir().resolve("discord-bridge.json");
+        try {
+            @Nullable DiscordBotConfig config = fromFile(configFile);
+            if (config != null) {
+                DiscordBot.init(config, server);
+                return 1;
+            } else {
+                LOGGER.error("A valid token is required in {}", configFile);
+                return 0;
+            }
+        } catch (LoginException e) {
+            LOGGER.error("A valid token is required in {}", configFile, e);
+            return 1;
+        } catch (IOException e) {
+            LOGGER.error("Failed to read config {}", configFile, e);
+            return 1;
         }
     }
 

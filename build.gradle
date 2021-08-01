@@ -44,6 +44,7 @@ dependencies {
 
     modImplementation include(fabricApi.module("fabric-api-base", "0.37.1+1.17"))
     modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", "0.37.1+1.17"))
+    modImplementation include(fabricApi.module("fabric-command-api-v1", "0.37.1+1.17"))
 
     implementation(include("net.dv8tion:JDA:4.3.0_293")) {
         exclude module: "opus-java"

@@ -4,31 +4,15 @@ import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.dv8tion.jda.api.entities.Emote;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.GuildChannel;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import net.dv8tion.jda.api.utils.Timestamp;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -85,8 +69,8 @@ public class DiscordFormattingConverter {
     private final String markdown;
     private int cursor;
     private final LiteralText root = new LiteralText("");
-    private List<ActiveFormatting> formattingStack = new ArrayList<>();
-    private Set<Formatting> activeFormatting = EnumSet.noneOf(Formatting.class);
+    private final List<ActiveFormatting> formattingStack = new ArrayList<>();
+    private final Set<Formatting> activeFormatting = EnumSet.noneOf(Formatting.class);
     final StringBuilder textBuffer = new StringBuilder();
 
     protected DiscordFormattingConverter(Message message) {
