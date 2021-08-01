@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
@@ -27,11 +28,13 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -50,6 +53,8 @@ import static selic.re.discordbridge.DiscordFormattingConverter.minecraftToDisco
 import static selic.re.discordbridge.GameMessageConverter.convertGameMessage;
 
 public class DiscordBot extends ListenerAdapter {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     // Discord... please :(
     private static final TemporalAmount TIME_BETWEEN_TOPIC_UPDATES = Duration.ofMinutes(10);
 
@@ -65,14 +70,15 @@ public class DiscordBot extends ListenerAdapter {
 
     private final WebhookClient webhook;
     private final JDA discord;
+    private final DiscordPlayerLookup playerLookup;
     private final Timer updateTimer = new Timer();
     private Instant nextTopicUpdateTime = Instant.now();
     private boolean topicNeedsUpdating = true;
     MinecraftServer server;
     DiscordBotConfig config;
 
-    public static void init(DiscordBotConfig config, MinecraftServer server) throws LoginException {
-        INSTANCE = new DiscordBot(config, server);
+    public static void init(DiscordBotConfig config, MinecraftServer server, DiscordPlayerLookup playerLookup) throws LoginException {
+        INSTANCE = new DiscordBot(config, server, playerLookup);
     }
 
     @Nonnull
@@ -80,12 +86,13 @@ public class DiscordBot extends ListenerAdapter {
         return Optional.of(INSTANCE);
     }
 
-    DiscordBot(DiscordBotConfig config, MinecraftServer server) throws LoginException {
+    DiscordBot(DiscordBotConfig config, MinecraftServer server, DiscordPlayerLookup playerLookup) throws LoginException {
         this.server = server;
         this.config = config;
         this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_EMOJIS)
             .addEventListeners(this)
             .build();
+        this.playerLookup = playerLookup;
         if (config.webhookUrl != null) {
             this.webhook = new WebhookClientBuilder(config.webhookUrl).setWait(false).build();
         } else {
@@ -129,9 +136,12 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event)
-    {
+    public void onMessageReceived(MessageReceivedEvent event) {
         if (config.allowsMessagesFrom(event.getChannel(), event.getAuthor())) {
+            if (event.getMessage().getContentRaw().startsWith("!")) {
+                handleDiscordCommand(event.getMessage());
+                return;
+            }
             Message msg = event.getMessage();
             LiteralText root = new LiteralText("");
 
@@ -186,6 +196,39 @@ public class DiscordBot extends ListenerAdapter {
                 }
             }
             this.broadcastNoMirror(root);
+        }
+    }
+
+    private void handleDiscordCommand(Message message) {
+        if (message.getMember() != null && message.getContentRaw().startsWith("!mcname")) {
+            String[] args = message.getContentRaw().split(" ");
+            if (args.length == 2) {
+                Optional<GameProfile> lookupResult = server.getUserCache().findByName(args[1]);
+                if (lookupResult.isEmpty()) {
+                    message.reply("I couldn't find a Minecraft user called `" + args[1] + "` - are you sure that it's correct?").queue();
+                } else {
+                    GameProfile profile = lookupResult.get();
+                    UUID old = playerLookup.updatePlayerProfile(message.getMember(), profile);
+                    server.getPlayerManager().getWhitelist().add(new WhitelistEntry(profile));
+
+                    if (old == null) {
+                        message.reply("Welcome, " + profile.getName() + "! You're all set up and have been added to the whitelist.").queue();
+                    } else if (old.equals(profile.getId())) {
+                        message.reply("I already know who you are <3").queue();
+                    } else {
+                        message.reply("I will remember that your new player profile is " + profile.getName() + ", but your old account has been forgotten.").queue();
+                        server.getPlayerManager().getWhitelist().remove(new GameProfile(old, null));
+                    }
+
+                    try {
+                        server.getPlayerManager().getWhitelist().save();
+                    } catch (IOException ex) {
+                        LOGGER.warn("Couldn't save whitelist", ex);
+                    }
+                }
+            } else {
+                message.reply("Usage: !mcname MyMinecraftUsername").queue();
+            }
         }
     }
 

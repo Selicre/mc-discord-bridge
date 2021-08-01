@@ -18,10 +18,12 @@ public class DiscordBridgeMod implements ModInitializer {
     public void onInitialize() {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path configFile = FabricLoader.getInstance().getConfigDir().resolve("discord-bridge.json");
+            Path lookupFile = FabricLoader.getInstance().getConfigDir().resolve("discord-users.json");
             try {
                 @Nullable DiscordBotConfig config = DiscordBotConfig.fromFile(configFile);
+                DiscordPlayerLookup lookup = DiscordPlayerLookup.fromFile(lookupFile);
                 if (config != null) {
-                    DiscordBot.init(config, server);
+                    DiscordBot.init(config, server, lookup);
                 } else {
                     LOGGER.error("A valid token is required in {}", configFile);
                 }
