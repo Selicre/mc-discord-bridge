@@ -36,6 +36,7 @@ abstract class PlayerManagerMixin {
 
         DiscordBot instance = DiscordBot.getInstance().get();
         instance.onPlayersChanged();
+        instance.onPlayerConnected(player.getGameProfile());
         if (instance.getConfig().listDiscordUsers) {
             for (Member member : instance.getChannelMembers()) {
                 String name = "@" + member.getUser().getName();

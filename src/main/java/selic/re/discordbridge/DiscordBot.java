@@ -7,10 +7,13 @@ import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.GuildChannel;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceStreamEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
@@ -29,10 +32,10 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -119,15 +122,30 @@ public class DiscordBot extends ListenerAdapter {
         boolean broadcastLeft = config.hasVoiceChannel(left);
 
         if (broadcastLeft && broadcastJoined) {
-            broadcastUpdate(joined, event.getMember(), "moved to");
+            broadcastVoiceUpdate(joined, event.getMember(), "moved to");
         } else if (broadcastJoined) {
-            broadcastUpdate(joined, event.getMember(), "joined");
+            broadcastVoiceUpdate(joined, event.getMember(), "joined");
         } else if (broadcastLeft) {
-            broadcastUpdate(left, event.getMember(), "left");
+            broadcastVoiceUpdate(left, event.getMember(), "left");
         }
     }
 
-    private void broadcastUpdate(VoiceChannel channel, Member member, String action) {
+    @Override
+    public void onGuildVoiceStream(@NotNull GuildVoiceStreamEvent event) {
+        announcePossibleStream(event.getVoiceState());
+    }
+
+    private void announcePossibleStream(@Nullable GuildVoiceState voice) {
+        if (voice != null && voice.getChannel() != null && voice.isStream() && isOnline(voice.getMember().getUser())) {
+            MutableText text = new LiteralText("")
+                .append(discordUserToMinecraft(voice.getMember().getUser(), voice.getGuild(), false))
+                .append(" is now streaming to ")
+                .append(discordChannelToMinecraft(voice.getChannel()));
+            broadcastNoMirror(text);
+        }
+    }
+
+    private void broadcastVoiceUpdate(VoiceChannel channel, Member member, String action) {
         broadcastNoMirror(new LiteralText("")
             .append(discordUserToMinecraft(member.getUser(), member.getGuild(), false))
             .append(" " + action + " ")
@@ -348,5 +366,23 @@ public class DiscordBot extends ListenerAdapter {
 
     public DiscordBotConfig getConfig() {
         return this.config;
+    }
+
+    public boolean isOnline(User discordUser) {
+        UUID id = playerLookup.getPlayerProfileId(discordUser);
+        if (id == null) {
+            return false;
+        }
+        return server.getPlayerManager().getPlayer(id) != null;
+    }
+
+    public void onPlayerConnected(GameProfile profile) {
+        TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+        if (chatChannel != null) {
+            Member member = playerLookup.getDiscordMember(chatChannel.getGuild(), profile);
+            if (member != null) {
+                announcePossibleStream(member.getVoiceState());
+            }
+        }
     }
 }

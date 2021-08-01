@@ -18,6 +18,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -105,6 +106,14 @@ public class DiscordPlayerLookup {
         } catch (IOException e) {
             LOGGER.error("Couldn't save discord<->player lookup map!", e);
         }
+    }
+
+    public UUID getPlayerProfileId(User user) {
+        PlayerInfo playerInfo = playersByDiscordId.get(user.getIdLong());
+        if (playerInfo == null) {
+            return null;
+        }
+        return playerInfo.profileId;
     }
 
     public static class PlayerInfo {
