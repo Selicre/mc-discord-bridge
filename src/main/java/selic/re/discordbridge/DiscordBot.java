@@ -330,7 +330,7 @@ public class DiscordBot extends ListenerAdapter {
         TextChannel chatChannel = discord.getTextChannelById(config.channelId);
 
         if (chatChannel != null && config.updateTopic) {
-            String topic = config.getTopicName(server.getPlayerNames());
+            String topic = config.getTopicName(getPlayerNames());
             chatChannel.getManager().setTopic(topic).queue(
                 null,
                 new ErrorHandler().handle(ErrorResponse.MISSING_PERMISSIONS, c -> {
@@ -347,6 +347,22 @@ public class DiscordBot extends ListenerAdapter {
         if (renameChannel != null) {
             renameChannel.getManager().setName(config.getRenameChannelName(playerCount)).queue();
         }
+    }
+
+    private String[] getPlayerNames() {
+        List<String> result = new ArrayList<>();
+
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            Member member = playerLookup.getDiscordMember(getGuild(), player.getGameProfile());
+            if (member != null) {
+                result.add(member.getEffectiveName());
+            } else {
+                result.add(player.getGameProfile().getName());
+            }
+        }
+
+        result.sort(String.CASE_INSENSITIVE_ORDER);
+        return result.toArray(new String[0]);
     }
 
     public void onPlayersChanged() {
