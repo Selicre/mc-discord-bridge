@@ -6,6 +6,7 @@ import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -17,6 +18,7 @@ import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceStreamEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.user.update.UserUpdateActivitiesEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
@@ -44,8 +46,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -76,6 +80,7 @@ public class DiscordBot extends ListenerAdapter {
     private final JDA discord;
     private final DiscordPlayerLookup playerLookup;
     private final Timer updateTimer = new Timer();
+    private final Set<UUID> livePlayers = new HashSet<>();
     private Instant nextTopicUpdateTime = Instant.now();
     private boolean topicNeedsUpdating = true;
     private Guild guild;
@@ -94,7 +99,7 @@ public class DiscordBot extends ListenerAdapter {
     DiscordBot(DiscordBotConfig config, MinecraftServer server, DiscordPlayerLookup playerLookup) throws LoginException {
         this.server = server;
         this.config = config;
-        this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_EMOJIS)
+        this.discord = JDABuilder.create(config.token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_EMOJIS, GatewayIntent.GUILD_PRESENCES)
             .addEventListeners(this)
             .build();
         this.playerLookup = playerLookup;
@@ -129,6 +134,43 @@ public class DiscordBot extends ListenerAdapter {
             broadcastVoiceUpdate(joined, event.getMember(), "joined");
         } else if (broadcastLeft) {
             broadcastVoiceUpdate(left, event.getMember(), "left");
+        }
+    }
+
+    @Override
+    public void onUserUpdateActivities(@Nonnull UserUpdateActivitiesEvent event) {
+        String streamLink = null;
+
+        for (Activity activity : event.getMember().getActivities()) {
+            if (activity.getType() == Activity.ActivityType.STREAMING && Activity.isValidStreamingUrl(activity.getUrl())) {
+                streamLink = activity.getUrl();
+                break;
+            }
+        }
+
+        UUID uuid = playerLookup.getPlayerProfileId(event.getUser());
+        if (uuid != null) {
+            boolean wasLive = livePlayers.contains(uuid);
+            ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+            if (streamLink != null && !wasLive) {
+                livePlayers.add(uuid);
+
+                if (player != null) {
+                    broadcastNoMirror(new LiteralText("")
+                        .append(discordUserToMinecraft(event.getUser(), event.getGuild(), false))
+                        .append(" is now streaming to ")
+                        .append(new LiteralText(streamLink).setStyle(Style.EMPTY.withUnderline(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, streamLink))))
+                        .append(" - Chat has been disabled."));
+                }
+            } else if (streamLink == null && wasLive) {
+                livePlayers.remove(uuid);
+
+                if (player != null) {
+                    broadcastNoMirror(new LiteralText("")
+                        .append(discordUserToMinecraft(event.getUser(), event.getGuild(), false))
+                        .append(" is no longer streaming. Chat has been reenabled."));
+                }
+            }
         }
     }
 
@@ -408,6 +450,12 @@ public class DiscordBot extends ListenerAdapter {
             Member member = playerLookup.getDiscordMember(guild, profile);
             if (member != null) {
                 announcePossibleStream(member.getVoiceState());
+
+                if (livePlayers.contains(profile.getId())) {
+                    broadcastNoMirror(new LiteralText("")
+                        .append(discordUserToMinecraft(member.getUser(), guild, false))
+                        .append(" is streaming. Chat has been disabled."));
+                }
             }
         }
     }
@@ -424,5 +472,9 @@ public class DiscordBot extends ListenerAdapter {
             }
         }
         return guild;
+    }
+
+    public boolean isStreaming(UUID uuid) {
+        return livePlayers.contains(uuid);
     }
 }
