@@ -21,10 +21,7 @@ abstract class PlayerEntityMixin extends LivingEntity {
         method = "getDisplayName()Lnet/minecraft/text/Text;",
         at = @At("HEAD"), require = 1, cancellable = true)
     private void getDisplayName(CallbackInfoReturnable<Text> ci) {
-        if (DiscordBot.getInstance().isEmpty()) {
-            return;
-        }
-        Text name = DiscordBot.getInstance().get().getDiscordName((PlayerEntity) (Object) this);
+        Text name = DiscordBot.instance().getDiscordName((PlayerEntity) (Object) this);
         if (name != null) {
             ci.setReturnValue(name);
         }

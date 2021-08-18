@@ -23,7 +23,7 @@ public class DiscordBridgeMod implements ModInitializer {
                 @Nullable DiscordBotConfig config = DiscordBotConfig.fromFile(configFile);
                 DiscordPlayerLookup lookup = DiscordPlayerLookup.fromFile(lookupFile);
                 if (config != null) {
-                    DiscordBot.init(config, server, lookup);
+                    DiscordBotImpl.init(config, server, lookup);
                 } else {
                     LOGGER.error("A valid token is required in {}", configFile);
                 }

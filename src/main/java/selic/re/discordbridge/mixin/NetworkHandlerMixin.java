@@ -13,8 +13,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import selic.re.discordbridge.DiscordBot;
 
-import java.util.Optional;
-
 @Mixin(ServerPlayNetworkHandler.class)
 abstract class NetworkHandlerMixin implements EntityTrackingListener, ServerPlayPacketListener {
     @Inject(
@@ -30,19 +28,18 @@ abstract class NetworkHandlerMixin implements EntityTrackingListener, ServerPlay
              be changed to match the translatable string rather than hijacking this particular class.
              That said, it works. For now.
             */
-            DiscordBot.getInstance().ifPresent(bot -> {
-                bot.sendChatMessage(getPlayer().getGameProfile(), "*" + str.substring("/me ".length()) + "*");
-            });
+            DiscordBot.instance().sendMessage(getPlayer().getGameProfile(), "*" + str.substring("/me ".length()) + "*");
         }
     }
 
     @ModifyVariable(method = "handleMessage(Lnet/minecraft/server/filter/TextStream$Message;)V", at = @At("STORE"), ordinal = 1)
     private Text replaceRawChatInput(Text original) {
-        Optional<DiscordBot> bot = DiscordBot.getInstance();
-        if (bot.isPresent() && (original instanceof TranslatableText text) && (text.getArgs().length == 2)) {
+        if ((original instanceof TranslatableText text) && (text.getArgs().length == 2)) {
             if ((text.getArgs()[0] instanceof Text author) && (text.getArgs()[1] instanceof String message)) {
-                Text messageText = bot.get().broadcastAndReplaceChatMessage(getPlayer().getGameProfile(), message);
-                return new TranslatableText("chat.type.text", author, messageText);
+                Text messageText = DiscordBot.instance().formatAndSendMessage(getPlayer().getGameProfile(), message);
+                if (messageText != null) {
+                    return new TranslatableText("chat.type.text", author, messageText);
+                }
             }
         }
         return original;
