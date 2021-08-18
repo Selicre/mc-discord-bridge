@@ -29,9 +29,7 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -308,13 +306,10 @@ public class DiscordFormattingConverter {
         Style style = Style.EMPTY;
         boolean online = false;
 
-        if (DiscordBot.getInstance().isPresent()) {
-            DiscordBot bot = DiscordBot.getInstance().get();
-            ServerPlayerEntity player = bot.getPlayer(user);
-            if (player != null) {
-                style = style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tell " + player.getGameProfile().getName() + " "));
-                online = true;
-            }
+        ServerPlayerEntity player = DiscordBot.instance().getPlayer(user);
+        if (player != null) {
+            style = style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tell " + player.getGameProfile().getName() + " "));
+            online = true;
         }
 
         if (online) {

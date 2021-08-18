@@ -23,22 +23,18 @@ abstract class PlayerManagerMixin {
         method = "remove(Lnet/minecraft/server/network/ServerPlayerEntity;)V",
         at = @At("RETURN"), require = 1)
     private void remove(CallbackInfo ci) {
-        DiscordBot.getInstance().ifPresent(DiscordBot::onPlayersChanged);
+        DiscordBot.instance().onPlayersChanged();
     }
 
     @Inject(
         method = "onPlayerConnect(Lnet/minecraft/network/ClientConnection;Lnet/minecraft/server/network/ServerPlayerEntity;)V",
         at = @At("RETURN"), require = 1, allow = 1)
     private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
-        if (DiscordBot.getInstance().isEmpty()) {
-            return;
-        }
-
-        DiscordBot instance = DiscordBot.getInstance().get();
-        instance.onPlayersChanged();
-        instance.onPlayerConnected(player.getGameProfile());
-        if (instance.getConfig().listDiscordUsers) {
-            for (Member member : instance.getChannelMembers()) {
+        DiscordBot bot = DiscordBot.instance();
+        bot.onPlayersChanged();
+        bot.onPlayerConnected(player.getGameProfile());
+        if (bot.getConfig().listDiscordUsers) {
+            for (Member member : bot.getChannelMembers()) {
                 String name = "@" + member.getUser().getName();
                 if (name.length() > 16 || member.getUser().isBot()) {
                     continue;

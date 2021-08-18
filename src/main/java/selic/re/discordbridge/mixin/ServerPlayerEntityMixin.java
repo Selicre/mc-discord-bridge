@@ -23,10 +23,7 @@ abstract class ServerPlayerEntityMixin extends PlayerEntity {
         method = "getPlayerListName()Lnet/minecraft/text/Text;",
         at = @At("HEAD"), require = 1, cancellable = true)
     private void getPlayerListName(CallbackInfoReturnable<Text> ci) {
-        if (DiscordBot.getInstance().isEmpty()) {
-            return;
-        }
-        Text name = DiscordBot.getInstance().get().getDiscordName(this);
+        Text name = DiscordBot.instance().getDiscordName(this);
         if (name != null) {
             ci.setReturnValue(name);
         }
@@ -36,11 +33,7 @@ abstract class ServerPlayerEntityMixin extends PlayerEntity {
         method = "acceptsMessage(Lnet/minecraft/network/MessageType;)Z",
         at = @At("HEAD"), require = 1, cancellable = true)
     private void acceptsMessage(MessageType type, CallbackInfoReturnable<Boolean> ci) {
-        if (DiscordBot.getInstance().isEmpty()) {
-            return;
-        }
-        DiscordBot discordBot = DiscordBot.getInstance().get();
-        if (type == MessageType.CHAT && discordBot.isChatHidden(getUuid())) {
+        if (type == MessageType.CHAT && DiscordBot.instance().isChatHidden(this)) {
             ci.setReturnValue(false);
         }
     }
