@@ -156,11 +156,14 @@ public class DiscordBot extends ListenerAdapter {
                 livePlayers.add(uuid);
 
                 if (player != null) {
-                    broadcastNoMirror(new LiteralText("")
+                    MutableText message = new LiteralText("")
                         .append(discordUserToMinecraft(event.getUser(), event.getGuild(), false))
                         .append(" is now streaming to ")
-                        .append(new LiteralText(streamLink).setStyle(Style.EMPTY.withUnderline(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, streamLink))))
-                        .append(" - Chat has been disabled."));
+                        .append(new LiteralText(streamLink).setStyle(Style.EMPTY.withUnderline(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, streamLink))));
+                    if (config.hideChatFromStreamers) {
+                        message.append(" - Chat has been disabled.");
+                    }
+                    broadcastNoMirror(message);
                 }
             } else if (streamLink == null && wasLive) {
                 livePlayers.remove(uuid);
@@ -451,7 +454,7 @@ public class DiscordBot extends ListenerAdapter {
             if (member != null) {
                 announcePossibleStream(member.getVoiceState());
 
-                if (livePlayers.contains(profile.getId())) {
+                if (config.hideChatFromStreamers && livePlayers.contains(profile.getId())) {
                     broadcastNoMirror(new LiteralText("")
                         .append(discordUserToMinecraft(member.getUser(), guild, false))
                         .append(" is streaming. Chat has been disabled."));
@@ -474,7 +477,7 @@ public class DiscordBot extends ListenerAdapter {
         return guild;
     }
 
-    public boolean isStreaming(UUID uuid) {
-        return livePlayers.contains(uuid);
+    public boolean isChatHidden(UUID uuid) {
+        return config.hideChatFromStreamers && livePlayers.contains(uuid);
     }
 }

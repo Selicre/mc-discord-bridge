@@ -38,7 +38,7 @@ abstract class ServerPlayerEntityMixin implements EntityLike {
             return;
         }
         DiscordBot discordBot = DiscordBot.getInstance().get();
-        if (type == MessageType.CHAT && discordBot.isStreaming(getUuid())) {
+        if (type == MessageType.CHAT && discordBot.isChatHidden(getUuid())) {
             ci.setReturnValue(false);
             ci.cancel();
         }

@@ -44,6 +44,7 @@ public class DiscordBotConfig {
     public String noPlayersTopicFormat = "Online!";
     public String withPlayersTopicFormat = "Online: %s";
     public String avatarUrl = "https://crafatar.com/renders/head/%s?overlay";
+    public boolean hideChatFromStreamers = true;
 
     public DiscordBotConfig() {}
 
