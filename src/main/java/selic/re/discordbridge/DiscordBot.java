@@ -23,6 +23,7 @@ import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WhitelistEntry;
@@ -360,6 +361,14 @@ public class DiscordBot extends ListenerAdapter {
                 chatChannel.sendMessage(minecraftToDiscord(text)).queue();
             }
         }
+    }
+
+    public Text getDiscordName(PlayerEntity player) {
+        Member member = playerLookup.getDiscordMember(guild, new GameProfile(player.getUuid(), null));
+        if (member != null) {
+            return DiscordFormattingConverter.discordUserToMinecraft(member.getUser(), guild, false);
+        }
+        return null;
     }
 
     protected WebhookMessageBuilder startWebhook(UUID id, String name) {

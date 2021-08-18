@@ -1,20 +1,24 @@
 package selic.re.discordbridge.mixin;
 
 import com.mojang.authlib.GameProfile;
-import net.dv8tion.jda.api.entities.Member;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.world.entity.EntityLike;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import selic.re.discordbridge.DiscordBot;
-import selic.re.discordbridge.DiscordFormattingConverter;
 
 @Mixin(ServerPlayerEntity.class)
-abstract class ServerPlayerEntityMixin implements EntityLike {
+abstract class ServerPlayerEntityMixin extends PlayerEntity {
+    ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile profile) {
+        super(world, pos, yaw, profile);
+    }
+
     @Inject(
         method = "getPlayerListName()Lnet/minecraft/text/Text;",
         at = @At("HEAD"), require = 1, cancellable = true)
@@ -22,11 +26,9 @@ abstract class ServerPlayerEntityMixin implements EntityLike {
         if (DiscordBot.getInstance().isEmpty()) {
             return;
         }
-        DiscordBot discordBot = DiscordBot.getInstance().get();
-        Member member = discordBot.getLookup().getDiscordMember(discordBot.getGuild(), new GameProfile(getUuid(), null));
-        if (member != null) {
-            ci.setReturnValue(DiscordFormattingConverter.discordUserToMinecraft(member.getUser(), discordBot.getGuild(), false));
-            ci.cancel();
+        Text name = DiscordBot.getInstance().get().getDiscordName(this);
+        if (name != null) {
+            ci.setReturnValue(name);
         }
     }
 
@@ -40,7 +42,6 @@ abstract class ServerPlayerEntityMixin implements EntityLike {
         DiscordBot discordBot = DiscordBot.getInstance().get();
         if (type == MessageType.CHAT && discordBot.isChatHidden(getUuid())) {
             ci.setReturnValue(false);
-            ci.cancel();
         }
     }
 }
