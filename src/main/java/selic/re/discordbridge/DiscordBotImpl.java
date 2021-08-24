@@ -204,8 +204,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (config.allowsMessagesFrom(event.getChannel(), event.getAuthor())) {
-            if (event.getMessage().getContentRaw().startsWith("!")) {
-                handleDiscordCommand(event.getMessage());
+            if (event.getMessage().getContentRaw().startsWith("!") && handleDiscordCommand(event.getMessage())) {
                 return;
             }
             Message msg = event.getMessage();
@@ -265,7 +264,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
         }
     }
 
-    private void handleDiscordCommand(Message message) {
+    private boolean handleDiscordCommand(Message message) {
         if (message.getMember() != null && message.getContentRaw().startsWith("!mcname")) {
             String[] args = message.getContentRaw().split(" ");
             if (args.length == 2) {
@@ -295,7 +294,11 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
             } else {
                 message.reply("Usage: !mcname MyMinecraftUsername").queue();
             }
+
+            return true;
         }
+
+        return false;
     }
 
     private static String readableFileSize(int sizeBytes) {
