@@ -368,9 +368,9 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     @Override
     public Text getDiscordName(PlayerEntity player) {
-        Member member = playerLookup.getDiscordMember(guild, new GameProfile(player.getUuid(), null));
+        Member member = playerLookup.getDiscordMember(getGuild(), new GameProfile(player.getUuid(), null));
         if (member != null) {
-            return DiscordFormattingConverter.discordUserToMinecraft(member.getUser(), guild, false);
+            return DiscordFormattingConverter.discordUserToMinecraft(member.getUser(), getGuild(), false);
         }
         return null;
     }
