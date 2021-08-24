@@ -104,7 +104,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
             .addEventListeners(this)
             .build();
         this.playerLookup = playerLookup;
-        if (config.webhookUrl != null) {
+        if (!config.webhookUrl.isEmpty()) {
             this.webhook = new WebhookClientBuilder(config.webhookUrl).setWait(false).build();
         } else {
             this.webhook = null;

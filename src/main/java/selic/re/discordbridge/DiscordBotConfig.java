@@ -7,6 +7,8 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.JsonAdapter;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -31,7 +33,7 @@ public class DiscordBotConfig {
         .create();
 
     public String token = "";
-    public String webhookUrl = null;
+    public String webhookUrl = "";
     public long channelId = 0;
     public long renameChannelId = 0;
     @JsonAdapter(LongSetDeserializer.class)
@@ -86,7 +88,12 @@ public class DiscordBotConfig {
         return channelId == channel.getIdLong() && (!user.isBot() || botWhitelist.contains(user.getIdLong()));
     }
 
-    private static final class LongSetDeserializer implements JsonDeserializer<LongSet> {
+    private static final class LongSetDeserializer implements JsonSerializer<LongSet>, JsonDeserializer<LongSet> {
+        @Override
+        public JsonElement serialize(LongSet src, Type typeOfSrc, JsonSerializationContext context) {
+            return context.serialize(src.toLongArray());
+        }
+
         @Override
         public LongSet deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             if (json.isJsonPrimitive()) { // Backwards compatibility
