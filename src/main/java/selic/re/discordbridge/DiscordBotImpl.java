@@ -158,7 +158,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
                 if (player != null) {
                     MutableText message = new LiteralText("")
-                        .append(discordUserToMinecraft(event.getUser(), event.getGuild(), false))
+                        .append(discordUserToMinecraft(event.getUser(), getGuild(), false))
                         .append(" is now streaming to ")
                         .append(new LiteralText(streamLink).setStyle(Style.EMPTY.withUnderline(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, streamLink))));
                     if (config.hideChatFromStreamers) {
@@ -171,7 +171,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
                 if (player != null) {
                     broadcastNoMirror(new LiteralText("")
-                        .append(discordUserToMinecraft(event.getUser(), event.getGuild(), false))
+                        .append(discordUserToMinecraft(event.getUser(), getGuild(), false))
                         .append(" is no longer streaming. Chat has been reenabled."));
                 }
             }
@@ -186,7 +186,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
     private void announcePossibleStream(@Nullable GuildVoiceState voice) {
         if (voice != null && voice.getChannel() != null && voice.isStream() && isOnline(voice.getMember().getUser())) {
             MutableText text = new LiteralText("")
-                .append(discordUserToMinecraft(voice.getMember().getUser(), voice.getGuild(), false))
+                .append(discordUserToMinecraft(voice.getMember().getUser(), getGuild(), false))
                 .append(" is now streaming to ")
                 .append(discordChannelToMinecraft(voice.getChannel()));
             broadcastNoMirror(text);
@@ -195,7 +195,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     private void broadcastVoiceUpdate(VoiceChannel channel, Member member, String action) {
         broadcastNoMirror(new LiteralText("")
-            .append(discordUserToMinecraft(member.getUser(), member.getGuild(), false))
+            .append(discordUserToMinecraft(member.getUser(), getGuild(), false))
             .append(" " + action + " ")
             .append(discordChannelToMinecraft(channel))
             .append(" (" + channel.getMembers().size() + " users connected)"));
@@ -211,7 +211,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
             LiteralText root = new LiteralText("");
 
             root.append("<");
-            root.append(discordUserToMinecraft(msg.getAuthor(), msg.getGuild(), false));
+            root.append(discordUserToMinecraft(msg.getAuthor(), getGuild(), false));
 
             Message refMsg = msg.getReferencedMessage();
             if (refMsg != null) {
@@ -219,7 +219,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
                 if (!refMsg.getContentRaw().isBlank()) {
                     arrow.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, discordMessageToMinecraft(refMsg))));
                 }
-                root.append(arrow).append(discordUserToMinecraft(refMsg.getAuthor(), msg.getGuild(), false));
+                root.append(arrow).append(discordUserToMinecraft(refMsg.getAuthor(), getGuild(), false));
             }
 
             root.append(">");
