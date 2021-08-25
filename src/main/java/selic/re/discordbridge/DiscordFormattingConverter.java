@@ -64,6 +64,7 @@ public class DiscordFormattingConverter {
      * A single-group implementation of {@link TimeFormat#MARKDOWN} that also accounts for trailing characters
      */
     private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("^(<t:-?\\d{1,17}(?::[tTdDfFR])?>).*?");
+    private static final Pattern USER_MENTION_PATTERN = Pattern.compile("^<@!?(\\d+)>");
 
     /**
      * String formatter templates for each timestamp formatting style
@@ -209,9 +210,12 @@ public class DiscordFormattingConverter {
     }
 
     private boolean tryMentions() {
-        for (User user : message.getMentionedUsers()) {
-            if (consume("<@!" + user.getId() + '>') || consume("<@" + user.getId() + '>')) {
-                addUserMention(user);
+        Matcher userMatcher = USER_MENTION_PATTERN.matcher(markdown.substring(cursor));
+        if (userMatcher.find()) {
+            Member member = message.getGuild().getMemberById(userMatcher.group(1));
+            if (member != null) {
+                addUserMention(member.getUser());
+                cursor += userMatcher.end();
                 return true;
             }
         }
