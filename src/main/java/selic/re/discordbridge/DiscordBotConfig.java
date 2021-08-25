@@ -35,6 +35,7 @@ public class DiscordBotConfig {
     public String token = "";
     public String webhookUrl = "";
     public long channelId = 0;
+    public long adminChannelId = 0;
     public long renameChannelId = 0;
     @JsonAdapter(LongSetDeserializer.class)
     public LongSet voiceChannels = LongSets.EMPTY_SET;

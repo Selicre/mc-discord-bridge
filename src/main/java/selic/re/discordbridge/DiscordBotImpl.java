@@ -235,8 +235,11 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+        if (config.adminChannelId == event.getChannel().getIdLong() && event.getMessage().getContentRaw().startsWith("!") && handleAdminDiscordCommand(event.getMessage())) {
+            return;
+        }
         if (config.allowsMessagesFrom(event.getChannel(), event.getAuthor())) {
-            if (event.getMessage().getContentRaw().startsWith("!") && handleDiscordCommand(event.getMessage())) {
+            if (event.getMessage().getContentRaw().startsWith("!") && handleNormalDiscordCommand(event.getMessage())) {
                 return;
             }
             Message msg = event.getMessage();
@@ -296,7 +299,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
         }
     }
 
-    private boolean handleDiscordCommand(Message message) {
+    private boolean handleNormalDiscordCommand(Message message) {
         if (message.getMember() != null && message.getContentRaw().startsWith("!mcname")) {
             String[] args = message.getContentRaw().split(" ");
             if (args.length == 2) {
@@ -325,6 +328,21 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
                 }
             } else {
                 message.reply("Usage: !mcname MyMinecraftUsername").queue();
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean handleAdminDiscordCommand(Message message) {
+        if (message.getContentRaw().startsWith("!run")) {
+            String[] args = message.getContentRaw().split(" ", 2);
+            if (args.length == 2) {
+                server.getCommandManager().execute(server.getCommandSource().withOutput(new DiscordCommandOutput(message)), args[1]);
+            } else {
+                message.reply("Usage: !run <command to execute>").queue();
             }
 
             return true;
