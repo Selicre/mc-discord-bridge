@@ -15,9 +15,15 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.events.guild.member.GenericGuildMemberEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
+import net.dv8tion.jda.api.events.guild.member.update.GenericGuildMemberUpdateEvent;
+import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceStreamEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.role.update.GenericRoleUpdateEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateActivitiesEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -25,6 +31,7 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.MessageType;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -181,6 +188,34 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
     @Override
     public void onGuildVoiceStream(@NotNull GuildVoiceStreamEvent event) {
         announcePossibleStream(event.getVoiceState());
+    }
+
+    @Override
+    public void onGenericGuildMember(@NotNull GenericGuildMemberEvent event) {
+        if (event.getGuild() != getGuild()) {
+            return;
+        }
+        broadcastNewName(event.getUser());
+    }
+
+    @Override
+    public void onGenericRoleUpdate(@NotNull GenericRoleUpdateEvent event) {
+        if (event.getGuild() != getGuild()) {
+            return;
+        }
+
+        server.execute(() -> {
+            PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME, server.getPlayerManager().getPlayerList());
+            server.getPlayerManager().sendToAll(packet);
+        });
+    }
+
+    private void broadcastNewName(User user) {
+        ServerPlayerEntity player = getPlayer(user);
+        if (player != null) {
+            PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME, player);
+            server.execute(() -> server.getPlayerManager().sendToAll(packet));
+        }
     }
 
     private void announcePossibleStream(@Nullable GuildVoiceState voice) {
