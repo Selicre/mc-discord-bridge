@@ -260,8 +260,7 @@ public class DiscordFormattingConverter {
 
     private void addUserMention(User user) {
         popSimpleText();
-        Text userText = discordUserToMinecraft(user, message.getGuild(), true);
-        addText(new LiteralText("@").setStyle(userText.getStyle()).append(userText));
+        addText(discordUserToMinecraft(user, message.getGuild(), true));
     }
 
     private void addTimestamp(Timestamp timestamp) {
