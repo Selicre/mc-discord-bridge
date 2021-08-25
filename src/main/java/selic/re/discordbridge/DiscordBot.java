@@ -42,4 +42,6 @@ public interface DiscordBot {
     void onPlayerConnected(GameProfile profile);
 
     boolean isChatHidden(PlayerEntity player);
+
+    void shutdown();
 }

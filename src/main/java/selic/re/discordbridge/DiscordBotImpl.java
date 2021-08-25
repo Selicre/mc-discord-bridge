@@ -16,10 +16,6 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.member.GenericGuildMemberEvent;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
-import net.dv8tion.jda.api.events.guild.member.update.GenericGuildMemberUpdateEvent;
-import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceStreamEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -87,7 +83,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
     private final WebhookClient webhook;
     private final JDA discord;
     private final DiscordPlayerLookup playerLookup;
-    private final Timer updateTimer = new Timer();
+    private final Timer updateTimer = new Timer(true);
     private final Set<UUID> livePlayers = new HashSet<>();
     private Instant nextTopicUpdateTime = Instant.now();
     private boolean topicNeedsUpdating = true;
@@ -112,7 +108,8 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
             .build();
         this.playerLookup = playerLookup;
         if (!config.webhookUrl.isEmpty()) {
-            this.webhook = new WebhookClientBuilder(config.webhookUrl).setWait(false).build();
+            this.webhook = new WebhookClientBuilder(config.webhookUrl).setWait(false).setDaemon(true).build();
+            webhook.send("Hello friends! The server is up <3");
         } else {
             this.webhook = null;
         }
@@ -351,6 +348,10 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     // This method is a reimplementation of broadcastChatMessage that will not mirror to discord.
     private void broadcastNoMirror(Text message) {
+        if (!server.isRunning() || server.isStopping()) {
+            // Sometimes we can get here during shutdown, as things on the discord thread keeps running
+            return;
+        }
         if (!server.isOnThread()) {
             server.execute(() -> this.broadcastNoMirror(message));
             return;
@@ -536,5 +537,16 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
     @Override
     public boolean isChatHidden(PlayerEntity player) {
         return config.hideChatFromStreamers && livePlayers.contains(player.getUuid());
+    }
+
+    @Override
+    public void shutdown() {
+        if (webhook != null) {
+            webhook.send("The server is being shutdown. Goodbye, friends! See you on the other side.");
+            webhook.close();
+        }
+
+        discord.shutdown();
+        updateTimer.cancel();
     }
 }

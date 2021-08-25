@@ -66,4 +66,9 @@ final class UninitializedDiscordBot implements DiscordBot {
     public boolean isChatHidden(PlayerEntity player) {
         return false;
     }
+
+    @Override
+    public void shutdown() {
+
+    }
 }
