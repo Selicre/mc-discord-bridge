@@ -101,7 +101,3 @@ jar {
         "Sealed": "true"
     )
 }
-
-assemble {
-    dependsOn versionFile
-}
