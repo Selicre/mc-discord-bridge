@@ -250,11 +250,11 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
             Message refMsg = msg.getReferencedMessage();
             if (refMsg != null) {
-                MutableText arrow = new LiteralText(" -> ");
+                MutableText arrow = new LiteralText("[->]");
                 if (!refMsg.getContentRaw().isBlank()) {
                     arrow.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, discordMessageToMinecraft(refMsg))));
                 }
-                root.append(arrow).append(discordUserToMinecraft(refMsg.getAuthor(), getGuild(), false));
+                root.append(" ").append(arrow).append(" ").append(discordUserToMinecraft(refMsg.getAuthor(), getGuild(), false));
             }
 
             root.append(">");
