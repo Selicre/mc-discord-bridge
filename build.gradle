@@ -40,6 +40,10 @@ repositories {
     }
 }
 
+configurations {
+    transitiveInclude
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:1.18.2"
     mappings "net.fabricmc:yarn:1.18.2+build.2:v2"
@@ -48,22 +52,22 @@ dependencies {
     modImplementation include(fabricApi.module("fabric-api-base", "0.48.0+1.18.2"))
     modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", "0.48.0+1.18.2"))
 
-    implementation(include("net.dv8tion:JDA:4.3.0_293")) {
+    implementation(transitiveInclude("net.dv8tion:JDA:4.3.0_293")) {
         exclude module: "opus-java"
     }
 
-    implementation include("club.minnced:discord-webhooks:0.5.7")
+    implementation transitiveInclude("club.minnced:discord-webhooks:0.5.7")
 
-    include "com.neovisionaries:nv-websocket-client:2.14"
-    include "com.squareup.okhttp3:okhttp:3.13.0"
-    include "com.squareup.okio:okio:1.17.2"
-    include "org.apache.commons:commons-collections4:4.1"
-    include "org.apache.commons:commons-compress:1.8.1"
-    include "net.sf.trove4j:trove4j:3.0.3"
-    include "com.fasterxml.jackson.core:jackson-annotations:2.10.1"
-    include "com.fasterxml.jackson.core:jackson-core:2.10.1"
-    include "com.fasterxml.jackson.core:jackson-databind:2.10.1"
-    include "org.json:json:20210307"
+    project.configurations.transitiveInclude {
+        def includer = { self, Set<ResolvedDependency> dependencies -> 
+            dependencies.forEach {
+                include("${it.moduleGroup}:${it.moduleName}:${it.moduleVersion}")
+                self(self, it.children)
+            }
+        }
+
+        includer(includer, resolvedConfiguration.firstLevelModuleDependencies)
+    }
 }
 
 compileJava {
