@@ -384,7 +384,7 @@ public class DiscordFormattingConverter {
         //CodeBlock(style -> style, "```"),
         //Quote(style -> style, ">"),
         //BlockQuotes(style -> style, ">>>"),
-        Spoilers((msg, style) -> style.obfuscated(true).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, msg)), "||"),
+        Spoilers((msg, style) -> style.withObfuscated(true).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, msg)), "||"),
         ;
 
         protected final BiFunction<Text, Style, Style> styler;

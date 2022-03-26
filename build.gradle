@@ -2,7 +2,7 @@ import org.gradle.util.GradleVersion
 import java.time.Instant
 
 plugins {
-    id "fabric-loom" version "0.8-SNAPSHOT"
+    id "fabric-loom" version "0.12.5"
     id "net.nemerosa.versioning" version "2.15.1"
 }
 
@@ -14,7 +14,9 @@ java {
 }
 
 loom {
-    refmapName = "mixins/discord-bridge/refmap.json"
+    mixin {
+        defaultRefmapName = "mixins/discord-bridge/refmap.json"
+    }
     runs {
         configureEach {
             property "mixin.debug", "true"
@@ -38,12 +40,12 @@ repositories {
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:1.17.1"
-    mappings "net.fabricmc:yarn:1.17.1+build.30:v2"
-    modImplementation "net.fabricmc:fabric-loader:0.11.6"
+    minecraft "com.mojang:minecraft:1.18.2"
+    mappings "net.fabricmc:yarn:1.18.2+build.2:v2"
+    modImplementation "net.fabricmc:fabric-loader:0.13.3"
 
-    modImplementation include(fabricApi.module("fabric-api-base", "0.37.1+1.17"))
-    modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", "0.37.1+1.17"))
+    modImplementation include(fabricApi.module("fabric-api-base", "0.48.0+1.18.2"))
+    modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", "0.48.0+1.18.2"))
 
     implementation(include("net.dv8tion:JDA:4.3.0_293")) {
         exclude module: "opus-java"
