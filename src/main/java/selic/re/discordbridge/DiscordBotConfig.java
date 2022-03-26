@@ -70,11 +70,10 @@ public class DiscordBotConfig {
     }
 
     public String getTopicName(String[] players) {
-        String topic = noPlayersTopicFormat;
         if (players.length > 0) {
-            topic = String.format(Locale.ROOT, withPlayersTopicFormat, String.join(", ", players));
+            return String.format(Locale.ROOT, withPlayersTopicFormat, String.join(", ", players));
         }
-        return topic;
+        return noPlayersTopicFormat;
     }
 
     public String getAvatarUrl(UUID uuid) {
