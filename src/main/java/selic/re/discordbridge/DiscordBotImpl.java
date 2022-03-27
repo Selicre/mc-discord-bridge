@@ -566,6 +566,11 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
         if (webhook != null) {
             webhook.send("The server is being shutdown. Goodbye, friends! See you on the other side.");
             webhook.close();
+        } else {
+            TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+            if (chatChannel != null) {
+                chatChannel.sendMessage("The server is being shutdown. Goodbye, friends! See you on the other side.").queue();
+            }
         }
 
         discord.shutdown();
