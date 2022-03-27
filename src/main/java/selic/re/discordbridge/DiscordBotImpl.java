@@ -7,6 +7,7 @@ import com.mojang.authlib.GameProfile;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -14,7 +15,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.member.GenericGuildMemberEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceStreamEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
@@ -132,8 +132,8 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     @Override
     public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
-        VoiceChannel joined = event.getChannelJoined();
-        VoiceChannel left = event.getChannelLeft();
+        AudioChannel joined = event.getChannelJoined();
+        AudioChannel left = event.getChannelLeft();
         boolean broadcastJoined = config.hasVoiceChannel(joined);
         boolean broadcastLeft = config.hasVoiceChannel(left);
 
@@ -229,7 +229,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
         }
     }
 
-    private void broadcastVoiceUpdate(VoiceChannel channel, Member member, String action) {
+    private void broadcastVoiceUpdate(AudioChannel channel, Member member, String action) {
         broadcastNoMirror(new LiteralText("")
             .append(discordUserToMinecraft(member.getUser(), getGuild(), false))
             .append(" " + action + " ")

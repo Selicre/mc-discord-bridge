@@ -52,11 +52,11 @@ dependencies {
     modImplementation include(fabricApi.module("fabric-api-base", "0.48.0+1.18.2"))
     modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", "0.48.0+1.18.2"))
 
-    implementation(transitiveInclude("net.dv8tion:JDA:4.3.0_293")) {
+    implementation(transitiveInclude("net.dv8tion:JDA:5.0.0-alpha.9")) {
         exclude module: "opus-java"
     }
 
-    implementation transitiveInclude("club.minnced:discord-webhooks:0.5.7")
+    implementation transitiveInclude("club.minnced:discord-webhooks:0.8.0")
 
     project.configurations.transitiveInclude {
         def includer = { self, Set<ResolvedDependency> dependencies -> 

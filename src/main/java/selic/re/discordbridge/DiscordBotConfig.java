@@ -13,17 +13,20 @@ import com.google.gson.annotations.JsonAdapter;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
+import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.VoiceChannel;
 
 import javax.annotation.Nullable;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Locale;
+import java.util.UUID;
 
 public class DiscordBotConfig {
     private static final Gson GSON = new GsonBuilder()
@@ -80,7 +83,7 @@ public class DiscordBotConfig {
         return String.format(Locale.ROOT, avatarUrl, uuid.toString());
     }
 
-    public boolean hasVoiceChannel(@Nullable VoiceChannel channel) {
+    public boolean hasVoiceChannel(@Nullable AudioChannel channel) {
         return channel != null && voiceChannels.contains(channel.getIdLong());
     }
 
