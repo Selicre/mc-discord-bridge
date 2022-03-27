@@ -95,7 +95,7 @@ public class DiscordFormattingConverter {
         this.message = message;
         this.markdown = message.getContentRaw();
         this.cursor = 0;
-        this.formattingStack.add(new ActiveFormatting("", Formatting.Root));
+        this.formattingStack.add(new ActiveFormatting(0, "", Formatting.Root));
     }
 
     protected char read() {
@@ -152,7 +152,7 @@ public class DiscordFormattingConverter {
             ActiveFormatting last = formattingStack.get(formattingStack.size() - 1);
             if (last.formatting == formatting) {
                 if (this.consume(last.trigger)) {
-                    popFormatting(last);
+                    popFormatting(last, false);
 
                     return true;
                 }
@@ -169,7 +169,7 @@ public class DiscordFormattingConverter {
                     popSimpleText();
                 }
                 this.activeFormatting.add(formatting);
-                this.formattingStack.add(new ActiveFormatting(trigger, formatting));
+                this.formattingStack.add(new ActiveFormatting(textBuffer.length(), trigger, formatting));
                 return true;
             }
         }
@@ -182,13 +182,17 @@ public class DiscordFormattingConverter {
         addText(text);
     }
 
-    private void popFormatting(ActiveFormatting entry) {
+    private void popFormatting(ActiveFormatting entry, boolean danglingToken) {
         formattingStack.remove(formattingStack.size() - 1);
         activeFormatting.remove(entry.formatting);
-
+        if (danglingToken) {
+            textBuffer.insert(entry.offset, entry.trigger);
+        }
         LiteralText text = new LiteralText(textBuffer.toString());
         textBuffer.setLength(0);
-        text.setStyle(entry.formatting.getStyle(text));
+        if (!danglingToken) {
+            text.setStyle(entry.formatting.getStyle(text));
+        }
         for (Text child : entry.children) {
             text.append(child);
         }
@@ -205,7 +209,7 @@ public class DiscordFormattingConverter {
 
         while (!formattingStack.isEmpty()) {
             ActiveFormatting last = formattingStack.get(formattingStack.size() - 1);
-            popFormatting(last);
+            popFormatting(last, true);
         }
     }
 
@@ -401,11 +405,13 @@ public class DiscordFormattingConverter {
     }
 
     protected static class ActiveFormatting {
+        protected final int offset;
         protected final String trigger;
         protected final Formatting formatting;
         protected final List<Text> children = new ArrayList<>();
 
-        public ActiveFormatting(String trigger, Formatting formatting) {
+        public ActiveFormatting(int offset, String trigger, Formatting formatting) {
+            this.offset = offset;
             this.trigger = trigger;
             this.formatting = formatting;
         }
