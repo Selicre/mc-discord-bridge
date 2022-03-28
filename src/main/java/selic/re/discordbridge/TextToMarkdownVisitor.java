@@ -19,9 +19,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     public String finish() {
         this.popTokens(Style.EMPTY); // Pop dangling tokens
 
-        String markdown = this.markdown.toString();
-        this.markdown.setLength(0); // Flush builder
-        return markdown;
+        return this.markdown.toString();
     }
 
     @Override
