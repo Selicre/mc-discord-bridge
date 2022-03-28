@@ -63,6 +63,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
 
     private void popTokens(Style style) {
         if (this.lastStyle.isEmpty()) {
+            this.lastStyle = style;
             return;
         }
 
