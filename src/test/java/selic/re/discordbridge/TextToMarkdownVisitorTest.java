@@ -1,5 +1,7 @@
 package selic.re.discordbridge;
 
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
@@ -61,6 +63,30 @@ public final class TextToMarkdownVisitorTest {
         spoiler.visit(visitor, Style.EMPTY);
 
         assertThat(visitor.finish()).isEqualTo("||This is spoiler||");
+    }
+
+    @Test
+    public void styleWithHoverEventIsTokenized() {
+        TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
+        MutableText component = new LiteralText("This has a hover event");
+        HoverEvent event = new HoverEvent(HoverEvent.Action.SHOW_TEXT, LiteralText.EMPTY);
+
+        component.setStyle(Style.EMPTY.withHoverEvent(event));
+        component.visit(visitor, Style.EMPTY);
+
+        assertThat(visitor.finish()).isEqualTo("**This has a hover event**");
+    }
+
+    @Test
+    public void styleWithClickEventIsTokenized() {
+        TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
+        MutableText component = new LiteralText("This has a click event");
+        ClickEvent event = new ClickEvent(ClickEvent.Action.OPEN_URL, "");
+
+        component.setStyle(Style.EMPTY.withClickEvent(event));
+        component.visit(visitor, Style.EMPTY);
+
+        assertThat(visitor.finish()).isEqualTo("**This has a click event**");
     }
 
     @Test
