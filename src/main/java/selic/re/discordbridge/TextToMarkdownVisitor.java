@@ -28,8 +28,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     public Optional<Void> accept(Style style, String text) {
         this.pushTokens(style);
         this.popTokens(style);
-
-        this.markdown.append(text);
+        this.pushText(text);
 
         return Optional.empty();
     }
@@ -86,6 +85,10 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
         }
 
         this.lastStyle = style;
+    }
+
+    private void pushText(String text) {
+        this.markdown.append(text.replaceAll("([*_~|`])+?", "\\$1"));
     }
 
     /**
