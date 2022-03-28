@@ -33,5 +33,9 @@ public class DiscordBridgeMod implements ModInitializer {
                 LOGGER.error("Failed to read config {}", configFile, e);
             }
         });
+
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            DiscordBot.instance().shutdown();
+        });
     }
 }

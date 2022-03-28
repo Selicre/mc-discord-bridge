@@ -5,7 +5,6 @@
   "package": "selic.re.discordbridge.mixin",
   "mixins": [
     "BroadcastHandlerMixin",
-    "MinecraftServerMixin",
     "NetworkHandlerMixin",
     "PlayerEntityMixin",
     "PlayerManagerMixin",
