@@ -32,6 +32,10 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     }
 
     private void pushTokens(Style style) {
+        if (style.isEmpty()) {
+            return;
+        }
+
         if (!this.lastStyle.isBold() && style.isBold()) {
             this.markdown.append(BOLD_TOKEN);
         }
@@ -58,6 +62,10 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     }
 
     private void popTokens(Style style) {
+        if (this.lastStyle.isEmpty()) {
+            return;
+        }
+
         if (this.isInlineCode(this.lastStyle) && !this.isInlineCode(style)) {
             this.markdown.append(INLINE_CODE_TOKEN);
         }
