@@ -13,7 +13,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     private static final String SPOILER_TOKEN = "||";
     private static final String INLINE_CODE_TOKEN = "`";
 
-    private final StringBuilder markdown = new StringBuilder();
+    private final StringBuilder markdown = new StringBuilder(0);
     private Style lastStyle = Style.EMPTY;
 
     public String finish() {
