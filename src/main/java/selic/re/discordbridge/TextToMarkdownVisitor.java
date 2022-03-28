@@ -11,7 +11,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     private static final String UNDERLINED_TOKEN = "__";
     private static final String STRIKETHROUGH_TOKEN = "~~";
     private static final String SPOILER_TOKEN = "||";
-    private static final String INLINE_CODE_TOKEN = "`";
+    private static final String INTERACTIVE_TOKEN = BOLD_TOKEN;
 
     private final StringBuilder markdown = new StringBuilder(0);
     private Style lastStyle = Style.EMPTY;
@@ -56,8 +56,8 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
             this.markdown.append(SPOILER_TOKEN);
         }
 
-        if (!this.isInlineCode(this.lastStyle) && this.isInlineCode(style)) {
-            this.markdown.append(INLINE_CODE_TOKEN);
+        if (!this.isInteractive(this.lastStyle) && this.isInteractive(style)) {
+            this.markdown.append(INTERACTIVE_TOKEN);
         }
     }
 
@@ -67,8 +67,8 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
             return;
         }
 
-        if (this.isInlineCode(this.lastStyle) && !this.isInlineCode(style)) {
-            this.markdown.append(INLINE_CODE_TOKEN);
+        if (this.isInteractive(this.lastStyle) && !this.isInteractive(style)) {
+            this.markdown.append(INTERACTIVE_TOKEN);
         }
 
         if (this.lastStyle.isObfuscated() && !style.isObfuscated()) {
@@ -98,14 +98,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
         this.markdown.append(text.replaceAll("([*_~|`])+?", "\\\\$1"));
     }
 
-    /**
-     * If the component can be interacted with in any way, we will treat it as
-     * pseudocode, representing it as an inline codeblock in markdown
-     *
-     * @param style The component style
-     * @return True if the component is clickable or has a tooltip
-     */
-    private boolean isInlineCode(Style style) {
+    private boolean isInteractive(Style style) {
         return style.getHoverEvent() != null || style.getClickEvent() != null;
     }
 }
