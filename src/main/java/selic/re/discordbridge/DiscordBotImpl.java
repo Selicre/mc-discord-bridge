@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.member.GenericGuildMemberEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceStreamEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
@@ -109,15 +110,9 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
         this.playerLookup = playerLookup;
         if (!config.webhookUrl.isEmpty()) {
             this.webhook = new WebhookClientBuilder(config.webhookUrl).setWait(false).setDaemon(true).build();
-            webhook.send("Hello friends! The server is up <3");
         } else {
             this.webhook = null;
-            TextChannel chatChannel = discord.getTextChannelById(config.channelId);
-            if (chatChannel != null) {
-                chatChannel.sendMessage("Hello friends! The server is up <3").queue();
-            }
         }
-
         this.updateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -128,6 +123,18 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
                 });
             }
         }, 30000, 30000);
+    }
+
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        if (this.webhook != null) {
+            this.webhook.send("Hello friends! The server is up <3");
+        } else {
+            TextChannel channel = discord.getTextChannelById(config.channelId);
+            if (channel != null) {
+                channel.sendMessage("Hello friends! The server is up <3").queue();
+            }
+        }
     }
 
     @Override
