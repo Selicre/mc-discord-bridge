@@ -19,7 +19,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     public String finish() {
         this.popTokens(Style.EMPTY); // Pop dangling tokens
 
-        return this.markdown.toString();
+        return this.toString();
     }
 
     @Override
@@ -29,6 +29,11 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
         this.pushText(text);
 
         return Optional.empty();
+    }
+
+    @Override
+    public String toString() {
+        return this.markdown.toString();
     }
 
     private void pushTokens(Style style) {
@@ -64,6 +69,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     private void popTokens(Style style) {
         if (this.lastStyle.isEmpty()) {
             this.lastStyle = style;
+
             return;
         }
 
