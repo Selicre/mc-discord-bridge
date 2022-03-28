@@ -95,7 +95,7 @@ public class TextToMarkdownVisitor implements StringVisitable.StyledVisitor<Void
     }
 
     private void pushText(String text) {
-        this.markdown.append(text.replaceAll("([*_~|`])+?", "\\$1"));
+        this.markdown.append(text.replaceAll("([*_~|`])+?", "\\\\$1"));
     }
 
     /**
