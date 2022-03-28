@@ -127,14 +127,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        if (this.webhook != null) {
-            this.webhook.send("Hello friends! The server is up <3");
-        } else {
-            TextChannel channel = discord.getTextChannelById(config.channelId);
-            if (channel != null) {
-                channel.sendMessage("Hello friends! The server is up <3").queue();
-            }
-        }
+        this.sendMessage(new LiteralText("Hello friends! The server is up <3"));
     }
 
     @Override
