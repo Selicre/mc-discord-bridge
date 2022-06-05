@@ -9,6 +9,7 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.world.GameMode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -40,10 +41,10 @@ abstract class PlayerManagerMixin {
                     continue;
                 }
                 PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER);
-                GameProfile profile = new GameProfile(PlayerEntity.getOfflinePlayerUuid(member.getId()), name);
+                GameProfile profile = new GameProfile(DynamicSerializableUuid.getOfflinePlayerUuid(member.getId()), name);
                 int latency = member.getOnlineStatus() == OnlineStatus.OFFLINE ? -1 : 10000;
                 Text displayName = DiscordFormattingConverter.discordUserToMinecraft(member.getUser(), member.getGuild(), false);
-                packet.getEntries().add(new PlayerListS2CPacket.Entry(profile, latency, GameMode.SPECTATOR, displayName));
+                packet.getEntries().add(new PlayerListS2CPacket.Entry(profile, latency, GameMode.SPECTATOR, displayName, null));
                 connection.send(packet);
             }
         }

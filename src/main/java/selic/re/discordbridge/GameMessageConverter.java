@@ -4,7 +4,9 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.LiteralTextContent;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -23,7 +25,7 @@ public class GameMessageConverter {
 
 
     private final String input;
-    private final LiteralText gameOutput;
+    private final MutableText gameOutput;
     private final StringBuilder discordOutput;
     private final TextChannel channel;
     private final JDA discord;
@@ -37,7 +39,7 @@ public class GameMessageConverter {
         this.input = input;
         this.channel = channel;
         this.discord = discord;
-        this.gameOutput = new LiteralText("");
+        this.gameOutput = Text.empty();
         this.discordOutput = new StringBuilder();
     }
 
@@ -144,15 +146,15 @@ public class GameMessageConverter {
 
     private void flushTextBuffer() {
         discordOutput.append(textBuffer);
-        gameOutput.append(new LiteralText(textBuffer.toString()));
+        gameOutput.append(textBuffer.toString());
         textBuffer.setLength(0);
     }
 
     public static class Results {
-        public final LiteralText gameOutput;
+        public final MutableText gameOutput;
         public final String discordOutput;
 
-        protected Results(LiteralText gameOutput, String discordOutput) {
+        protected Results(MutableText gameOutput, String discordOutput) {
             this.gameOutput = gameOutput;
             this.discordOutput = discordOutput;
         }

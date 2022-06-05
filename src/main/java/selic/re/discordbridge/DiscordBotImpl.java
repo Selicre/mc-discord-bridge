@@ -27,14 +27,15 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.MessageType;
+import net.minecraft.network.message.MessageSender;
+import net.minecraft.network.message.MessageType;
+import net.minecraft.network.message.SignedMessage;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -127,7 +128,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        this.sendMessage(new LiteralText("Hello friends! The server is up <3"));
+        this.sendMessage(Text.of("Hello friends! The server is up <3"));
     }
 
     @Override
@@ -165,10 +166,10 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
                 livePlayers.add(uuid);
 
                 if (player != null) {
-                    MutableText message = new LiteralText("")
+                    MutableText message = Text.empty()
                         .append(discordUserToMinecraft(event.getUser(), getGuild(), false))
                         .append(" is now streaming to ")
-                        .append(new LiteralText(streamLink).setStyle(Style.EMPTY.withUnderline(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, streamLink))));
+                        .append(Text.empty().append(streamLink).setStyle(Style.EMPTY.withUnderline(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, streamLink))));
                     if (config.hideChatFromStreamers) {
                         message.append(" - Chat has been disabled.");
                     }
@@ -178,7 +179,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
                 livePlayers.remove(uuid);
 
                 if (player != null) {
-                    broadcastNoMirror(new LiteralText("")
+                    broadcastNoMirror(Text.empty()
                         .append(discordUserToMinecraft(event.getUser(), getGuild(), false))
                         .append(" is no longer streaming. Chat has been reenabled."));
                 }
@@ -221,7 +222,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     private void announcePossibleStream(@Nullable GuildVoiceState voice) {
         if (voice != null && voice.getChannel() != null && voice.isStream() && isOnline(voice.getMember().getUser())) {
-            MutableText text = new LiteralText("")
+            MutableText text = Text.empty()
                 .append(discordUserToMinecraft(voice.getMember().getUser(), getGuild(), false))
                 .append(" is now streaming to ")
                 .append(discordChannelToMinecraft(voice.getChannel()));
@@ -230,7 +231,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
     }
 
     private void broadcastVoiceUpdate(AudioChannel channel, Member member, String action) {
-        broadcastNoMirror(new LiteralText("")
+        broadcastNoMirror(Text.empty()
             .append(discordUserToMinecraft(member.getUser(), getGuild(), false))
             .append(" " + action + " ")
             .append(discordChannelToMinecraft(channel))
@@ -247,14 +248,14 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
                 return;
             }
             Message msg = event.getMessage();
-            LiteralText root = new LiteralText("");
+            MutableText root = Text.empty();
 
             root.append("<");
             root.append(discordUserToMinecraft(msg.getAuthor(), getGuild(), false));
 
             Message refMsg = msg.getReferencedMessage();
             if (refMsg != null) {
-                MutableText arrow = new LiteralText("[->]");
+                MutableText arrow = Text.empty().append("[->]");
                 if (!refMsg.getContentRaw().isBlank()) {
                     arrow.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, discordMessageToMinecraft(refMsg))));
                 }
@@ -271,29 +272,30 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
             if (!msg.getAttachments().isEmpty()) {
                 for (Message.Attachment attachment : msg.getAttachments()) {
                     root.append(" [");
-                    LiteralText fileType = null;
+                    MutableText fileType = Text.empty();
                     if (attachment.isImage()) {
-                        fileType = new LiteralText("image");
+                        fileType.append("image");
                     } else if (attachment.isVideo()) {
-                        fileType = new LiteralText("video");
+                        fileType.append("video");
                     } else {
                         @Nullable String mediaType = attachment.getContentType();
                         if (mediaType != null) {
                             if (mediaType.startsWith("text")) {
-                                fileType = new LiteralText("text");
+                                fileType.append("text");
                             } else if (mediaType.startsWith("audio")) {
-                                fileType = new LiteralText("audio");
+                                fileType.append("audio");
+                            } else {
+                                fileType.append("attachment");
                             }
-                        }
-                        if (fileType == null)  {
-                            fileType = new LiteralText("attachment");
+                        } else {
+                            fileType.append("attachment");
                         }
                     }
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
-                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("")
+                    HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.empty()
                         .append(attachment.getFileName())
                         .append("\n")
-                        .append(new LiteralText(readableFileSize(attachment.getSize()))));
+                        .append(Text.of(readableFileSize(attachment.getSize()))));
                     fileType.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
                     root.append(fileType);
                     root.append("]");
@@ -378,24 +380,22 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
             server.execute(() -> this.broadcastNoMirror(message));
             return;
         }
-        MessageType type = MessageType.CHAT;
-        UUID sender = new UUID(0, 0);
 
-        server.sendSystemMessage(message, sender);
+        server.sendMessage(message);
 
         for (ServerPlayerEntity serverPlayerEntity : server.getPlayerManager().getPlayerList()) {
-            serverPlayerEntity.sendMessage(message, type, sender);
+            serverPlayerEntity.sendMessage(message, MessageType.SYSTEM);
         }
     }
 
     @Override
-    public Text formatAndSendMessage(GameProfile author, String message) {
+    public Text formatAndSendMessage(GameProfile author, Text message) {
         TextChannel chatChannel = discord.getTextChannelById(config.channelId);
         if (chatChannel == null) {
-            return new LiteralText(message);
+            return message;
         }
 
-        GameMessageConverter.Results results = convertGameMessage(message, chatChannel, discord);
+        GameMessageConverter.Results results = convertGameMessage(message.getString(), chatChannel, discord);
         sendMessage(author, results.discordOutput);
         return results.gameOutput;
     }
@@ -534,7 +534,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
                 announcePossibleStream(member.getVoiceState());
 
                 if (config.hideChatFromStreamers && livePlayers.contains(profile.getId())) {
-                    broadcastNoMirror(new LiteralText("")
+                    broadcastNoMirror(Text.empty()
                         .append(discordUserToMinecraft(member.getUser(), guild, false))
                         .append(" is streaming. Chat has been disabled."));
                 }

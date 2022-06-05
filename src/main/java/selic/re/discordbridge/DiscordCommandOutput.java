@@ -42,7 +42,7 @@ public class DiscordCommandOutput implements CommandOutput {
     }
 
     @Override
-    public void sendSystemMessage(Text text, UUID sender) {
+    public void sendMessage(Text text) {
         lock.lock();
         try {
             if (scheduledFlush != null) {
