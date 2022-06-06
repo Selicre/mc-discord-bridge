@@ -128,7 +128,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        this.sendMessage(Text.of("Hello friends! The server is up <3"));
+        this.sendMessage(Text.literal("Hello friends! The server is up <3"));
     }
 
     @Override
@@ -169,7 +169,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
                     MutableText message = Text.empty()
                         .append(discordUserToMinecraft(event.getUser(), getGuild(), false))
                         .append(" is now streaming to ")
-                        .append(Text.empty().append(streamLink).setStyle(Style.EMPTY.withUnderline(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, streamLink))));
+                        .append(Text.literal(streamLink).setStyle(Style.EMPTY.withUnderline(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, streamLink))));
                     if (config.hideChatFromStreamers) {
                         message.append(" - Chat has been disabled.");
                     }
@@ -255,7 +255,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
 
             Message refMsg = msg.getReferencedMessage();
             if (refMsg != null) {
-                MutableText arrow = Text.empty().append("[->]");
+                MutableText arrow = Text.literal("[->]");
                 if (!refMsg.getContentRaw().isBlank()) {
                     arrow.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, discordMessageToMinecraft(refMsg))));
                 }
@@ -272,30 +272,29 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
             if (!msg.getAttachments().isEmpty()) {
                 for (Message.Attachment attachment : msg.getAttachments()) {
                     root.append(" [");
-                    MutableText fileType = Text.empty();
+                    MutableText fileType = null;
                     if (attachment.isImage()) {
-                        fileType.append("image");
+                        fileType = Text.literal("image");
                     } else if (attachment.isVideo()) {
-                        fileType.append("video");
+                        fileType = Text.literal("video");
                     } else {
                         @Nullable String mediaType = attachment.getContentType();
                         if (mediaType != null) {
                             if (mediaType.startsWith("text")) {
-                                fileType.append("text");
+                                fileType = Text.literal("text");
                             } else if (mediaType.startsWith("audio")) {
-                                fileType.append("audio");
-                            } else {
-                                fileType.append("attachment");
+                                fileType = Text.literal("audio");
                             }
-                        } else {
-                            fileType.append("attachment");
+                        }
+                        if (fileType == null) {
+                            fileType = Text.literal("attachment");
                         }
                     }
                     ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl());
                     HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.empty()
                         .append(attachment.getFileName())
                         .append("\n")
-                        .append(Text.of(readableFileSize(attachment.getSize()))));
+                        .append(readableFileSize(attachment.getSize())));
                     fileType.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover));
                     root.append(fileType);
                     root.append("]");

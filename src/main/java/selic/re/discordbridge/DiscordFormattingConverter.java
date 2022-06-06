@@ -173,7 +173,7 @@ public class DiscordFormattingConverter {
     }
 
     private void popSimpleText() {
-        Text text = Text.of(textBuffer.toString());
+        Text text = Text.literal(textBuffer.toString());
         textBuffer.setLength(0);
         addText(text);
     }
@@ -184,7 +184,7 @@ public class DiscordFormattingConverter {
         if (danglingToken) {
             textBuffer.insert(entry.offset, entry.trigger);
         }
-        MutableText text = Text.empty().append(textBuffer.toString());
+        MutableText text = Text.literal(textBuffer.toString());
         textBuffer.setLength(0);
         if (!danglingToken) {
             text.setStyle(entry.formatting.getStyle(text));
@@ -246,7 +246,7 @@ public class DiscordFormattingConverter {
     }
 
     private void addRoleMention(Role role) {
-        MutableText text = Text.empty().append("@" + role.getName());
+        MutableText text = Text.literal("@" + role.getName());
         text.setStyle(Style.EMPTY.withColor(role.getColorRaw()).withInsertion(role.getAsMention()));
         popSimpleText();
         addText(text);
@@ -284,8 +284,8 @@ public class DiscordFormattingConverter {
         String name = (channel.getType().isMessage() ? "#" : "") + channel.getName();
         String type = CHANNEL_TYPE_STRINGIFIER.apply(channel.getType().name());
 
-        return Text.empty().append(name).setStyle(Style.EMPTY.withInsertion(channel.getAsMention())
-            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(type))));
+        return Text.literal(name).setStyle(Style.EMPTY.withInsertion(channel.getAsMention())
+            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(type))));
     }
 
     public static Text discordMessageToMinecraft(Message message) {
@@ -295,16 +295,16 @@ public class DiscordFormattingConverter {
     }
 
     public static MutableText discordEmoteToMinecraft(Emote emote) {
-        MutableText text = Text.empty().append(":" + emote.getName() + ":");
+        MutableText text = Text.literal(":" + emote.getName() + ":");
         ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, emote.getImageUrl());
-        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(emote.getGuild() == null ? "Emote" : "Emote from " + emote.getGuild().getName()));
+        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(emote.getGuild() == null ? "Emote" : "Emote from " + emote.getGuild().getName()));
         text.setStyle(Style.EMPTY.withClickEvent(click).withHoverEvent(hover).withInsertion(":" + emote.getName() + ":"));
         return text;
     }
 
     public static Text discordUserToMinecraft(User user, Guild guild, boolean asMention) {
         @Nullable Member member = guild.getMember(user);
-        MutableText tooltip = Text.empty().append(user.getAsTag());
+        MutableText tooltip = Text.literal(user.getAsTag());
         String userName = user.getName();
         Style style = Style.EMPTY;
         boolean online = false;
@@ -333,7 +333,7 @@ public class DiscordFormattingConverter {
 
             for (Role role : roles) {
                 tooltip.append("\n- ");
-                tooltip.append(Text.empty().append(role.getName())
+                tooltip.append(Text.literal(role.getName())
                     .setStyle(Style.EMPTY.withColor(role.getColorRaw())));
             }
         }
@@ -342,7 +342,7 @@ public class DiscordFormattingConverter {
             userName = "@" + userName;
         }
 
-        return Text.empty().append(userName).setStyle(style.withInsertion("@" + user.getAsTag())
+        return Text.literal(userName).setStyle(style.withInsertion("@" + user.getAsTag())
             .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)));
     }
 
@@ -360,11 +360,11 @@ public class DiscordFormattingConverter {
     public static Text discordTimestampToMinecraft(Timestamp timestamp) {
         // TODO Allow configuration of preferred time zone and hour (24/12) format?
         LocalDateTime dateTime = LocalDateTime.ofInstant(timestamp.toInstant(), ZoneOffset.UTC);
-        return Text.empty().append("[")
+        return Text.literal("[")
             .append(TIMESTAMP_FORMATS.get(timestamp.getFormat()).formatted(dateTime))
             .append("]")
             .setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                Text.of(TIMESTAMP_FORMATS.get(TimeFormat.DATE_TIME_LONG).formatted(dateTime))
+                Text.literal(TIMESTAMP_FORMATS.get(TimeFormat.DATE_TIME_LONG).formatted(dateTime))
             )).withInsertion(timestamp.toString()));
     }
 
