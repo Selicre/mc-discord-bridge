@@ -8,7 +8,7 @@
   "icon": "assets/discord-bridge/icon.png",
   "depends": {
     "fabricloader": ">=0.14.6",
-    "minecraft": "~1.19-rc.2",
+    "minecraft": ">=1.19",
     "java": ">=17"
   },
   "entrypoints": {
