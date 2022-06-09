@@ -7,9 +7,9 @@
   "license": "MIT",
   "icon": "assets/discord-bridge/icon.png",
   "depends": {
-    "fabricloader": ">=0.11.6",
-    "minecraft": ">=1.17",
-    "java": ">=16"
+    "fabricloader": ">=0.14.6",
+    "minecraft": ">=1.19",
+    "java": ">=17"
   },
   "entrypoints": {
     "main": [

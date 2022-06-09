@@ -34,7 +34,7 @@ public interface DiscordBot {
     void sendMessage(GameProfile sender, String message);
 
     @Nullable
-    Text formatAndSendMessage(GameProfile sender, String message);
+    Text formatAndSendMessage(GameProfile sender, Text message);
 
 
     void onPlayersChanged();

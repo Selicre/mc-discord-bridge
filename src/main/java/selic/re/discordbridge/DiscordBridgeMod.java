@@ -2,7 +2,9 @@ package selic.re.discordbridge;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,6 +12,7 @@ import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 
 public class DiscordBridgeMod implements ModInitializer {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -36,6 +39,15 @@ public class DiscordBridgeMod implements ModInitializer {
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             DiscordBot.instance().shutdown();
+        });
+
+        ServerMessageDecoratorEvent.EVENT.register(ServerMessageDecoratorEvent.STYLING_PHASE, (sender, message) -> {
+            if (sender != null) {
+                Text messageText = DiscordBot.instance().formatAndSendMessage(sender.getGameProfile(), message);
+                return CompletableFuture.completedFuture(messageText);
+            }
+
+            return CompletableFuture.completedFuture(message);
         });
     }
 }

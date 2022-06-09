@@ -1,10 +1,6 @@
 package selic.re.discordbridge;
 
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
+import net.minecraft.text.*;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -13,7 +9,7 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void boldStyleIsTokenized() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText bold = new LiteralText("This is bold");
+        MutableText bold = Text.literal("This is bold");
 
         bold.setStyle(Style.EMPTY.withBold(true));
         bold.visit(visitor, Style.EMPTY);
@@ -24,7 +20,7 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void italicStyleIsTokenized() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText italic = new LiteralText("This is italic");
+        MutableText italic = Text.literal("This is italic");
 
         italic.setStyle(Style.EMPTY.withItalic(true));
         italic.visit(visitor, Style.EMPTY);
@@ -35,7 +31,7 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void underlineStyleIsTokenized() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText underline = new LiteralText("This is underline");
+        MutableText underline = Text.literal("This is underline");
 
         underline.setStyle(Style.EMPTY.withUnderline(true));
         underline.visit(visitor, Style.EMPTY);
@@ -46,7 +42,7 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void strikethroughStyleIsTokenized() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText strikethrough = new LiteralText("This is strikethrough");
+        MutableText strikethrough = Text.literal("This is strikethrough");
 
         strikethrough.setStyle(Style.EMPTY.withStrikethrough(true));
         strikethrough.visit(visitor, Style.EMPTY);
@@ -57,7 +53,7 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void spoilerStyleIsTokenized() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText spoiler = new LiteralText("This is spoiler");
+        MutableText spoiler = Text.literal("This is spoiler");
 
         spoiler.setStyle(Style.EMPTY.withObfuscated(true));
         spoiler.visit(visitor, Style.EMPTY);
@@ -68,8 +64,8 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void styleWithHoverEventIsTokenized() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText component = new LiteralText("This has a hover event");
-        HoverEvent event = new HoverEvent(HoverEvent.Action.SHOW_TEXT, LiteralText.EMPTY);
+        MutableText component = Text.literal("This has a hover event");
+        HoverEvent event = new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.empty());
 
         component.setStyle(Style.EMPTY.withHoverEvent(event));
         component.visit(visitor, Style.EMPTY);
@@ -80,7 +76,7 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void styleWithClickEventIsTokenized() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText component = new LiteralText("This has a click event");
+        MutableText component = Text.literal("This has a click event");
         ClickEvent event = new ClickEvent(ClickEvent.Action.OPEN_URL, "");
 
         component.setStyle(Style.EMPTY.withClickEvent(event));
@@ -92,11 +88,11 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void nestedStylesAreTokenized() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText bold = new LiteralText("This is ").setStyle(Style.EMPTY.withBold(true));
-        MutableText italic = new LiteralText("italic, ").setStyle(Style.EMPTY.withItalic(true));
-        MutableText underlined = new LiteralText("underlined").setStyle(Style.EMPTY.withUnderline(true));
+        MutableText bold = Text.literal("This is ").setStyle(Style.EMPTY.withBold(true));
+        MutableText italic = Text.literal("italic, ").setStyle(Style.EMPTY.withItalic(true));
+        MutableText underlined = Text.literal("underlined").setStyle(Style.EMPTY.withUnderline(true));
 
-        bold.append(italic.append(underlined)).append(new LiteralText(", and bold"));
+        bold.append(italic.append(underlined)).append(Text.literal(", and bold"));
 
         bold.visit(visitor, Style.EMPTY);
 
@@ -106,7 +102,7 @@ public final class TextToMarkdownVisitorTest {
     @Test
     public void literalTokensAreEscaped() {
         TextToMarkdownVisitor visitor = new TextToMarkdownVisitor();
-        MutableText tokenized = new LiteralText("*These* __are__ ||literal|| `tokens`");
+        MutableText tokenized = Text.literal("*These* __are__ ||literal|| `tokens`");
 
         tokenized.visit(visitor, Style.EMPTY);
 

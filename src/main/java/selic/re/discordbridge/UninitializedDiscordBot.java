@@ -50,7 +50,7 @@ final class UninitializedDiscordBot implements DiscordBot {
 
     @Override
     @Nullable
-    public Text formatAndSendMessage(GameProfile sender, String message) {
+    public Text formatAndSendMessage(GameProfile sender, Text message) {
         return null;
     }
 
