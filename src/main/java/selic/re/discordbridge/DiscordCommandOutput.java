@@ -6,8 +6,6 @@ import net.minecraft.server.command.CommandOutput;
 import net.minecraft.text.Text;
 
 import java.util.Queue;
-import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
