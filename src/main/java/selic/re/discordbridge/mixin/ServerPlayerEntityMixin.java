@@ -3,11 +3,9 @@ package selic.re.discordbridge.mixin;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.encryption.PlayerPublicKey;
-import net.minecraft.network.message.MessageType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,11 +32,20 @@ abstract class ServerPlayerEntityMixin extends PlayerEntity {
     }
 
     @Inject(
-        method = "acceptsMessage",
+        method = "method_44706",
         at = @At("HEAD"), require = 1, cancellable = true)
-    private void acceptsMessage(RegistryKey<MessageType> type, CallbackInfoReturnable<Boolean> ci) {
-        if (type == MessageType.CHAT && DiscordBot.instance().isChatHidden(this)) {
+    private void acceptsMessage(CallbackInfoReturnable<Boolean> ci) {
+        if (DiscordBot.instance().isChatHidden(this)) {
             ci.setReturnValue(false);
         }
     }
+    @Inject(
+        method = "method_44707",
+        at = @At("HEAD"), require = 1, cancellable = true)
+    private void acceptsMessage(boolean actionBar, CallbackInfoReturnable<Boolean> ci) {
+        if (!actionBar && DiscordBot.instance().isChatHidden(this)) {
+            ci.setReturnValue(false);
+        }
+    }
+
 }

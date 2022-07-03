@@ -27,7 +27,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.message.MessageType;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WhitelistEntry;
@@ -381,7 +380,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
         server.sendMessage(message);
 
         for (ServerPlayerEntity serverPlayerEntity : server.getPlayerManager().getPlayerList()) {
-            serverPlayerEntity.sendMessage(message, MessageType.SYSTEM);
+            serverPlayerEntity.sendMessage(message, false);
         }
     }
 
