@@ -391,7 +391,7 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
             return message;
         }
 
-        GameMessageConverter.Results results = convertGameMessage(message.getString(), chatChannel, discord);
+        GameMessageConverter.Results results = convertGameMessage(message, chatChannel, discord);
         sendMessage(author, results.discordOutput);
         return results.gameOutput;
     }
