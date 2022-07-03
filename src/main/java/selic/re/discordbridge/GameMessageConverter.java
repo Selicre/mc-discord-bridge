@@ -25,6 +25,7 @@ public class GameMessageConverter {
 
     private final String input;
     private final MutableText gameOutput;
+    private boolean gameOutputDecorated = false;
     private final StringBuilder discordOutput;
     private final TextChannel channel;
     private final JDA discord;
@@ -42,10 +43,11 @@ public class GameMessageConverter {
         this.discordOutput = new StringBuilder();
     }
 
-    public static Results convertGameMessage(String input, TextChannel channel, JDA discord) {
-        GameMessageConverter converter = new GameMessageConverter(input, channel, discord);
+    public static Results convertGameMessage(Text message, TextChannel channel, JDA discord) {
+        GameMessageConverter converter = new GameMessageConverter(message.getString(), channel, discord);
         converter.readToEnd();
-        return new Results(converter.gameOutput, converter.discordOutput.toString());
+        Text gameMessage = (converter.gameOutputDecorated ? converter.gameOutput : message);
+        return new Results(gameMessage, converter.discordOutput.toString());
     }
 
     protected char read() {
@@ -135,12 +137,14 @@ public class GameMessageConverter {
         flushTextBuffer();
         discordOutput.append(member.getAsMention());
         gameOutput.append(discordUserToMinecraft(member.getUser(), member.getGuild(), true));
+        gameOutputDecorated = true;
     }
 
     private void insertEmote(Emote emote) {
         flushTextBuffer();
         discordOutput.append(emote.getAsMention());
         gameOutput.append(discordEmoteToMinecraft(emote));
+        gameOutputDecorated = true;
     }
 
     private void flushTextBuffer() {
@@ -150,10 +154,10 @@ public class GameMessageConverter {
     }
 
     public static class Results {
-        public final MutableText gameOutput;
+        public final Text gameOutput;
         public final String discordOutput;
 
-        protected Results(MutableText gameOutput, String discordOutput) {
+        protected Results(Text gameOutput, String discordOutput) {
             this.gameOutput = gameOutput;
             this.discordOutput = discordOutput;
         }

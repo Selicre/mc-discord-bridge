@@ -45,13 +45,13 @@ configurations {
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:1.19"
-    mappings "net.fabricmc:yarn:1.19+build.1:v2"
-    modImplementation "net.fabricmc:fabric-loader:0.14.6"
+    minecraft "com.mojang:minecraft:1.19.1-pre2"
+    mappings "net.fabricmc:yarn:1.19.1-pre2+build.2:v2"
+    modImplementation "net.fabricmc:fabric-loader:0.14.8"
 
-    modImplementation include(fabricApi.module("fabric-api-base", "0.55.2+1.19"))
-    modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", "0.55.2+1.19"))
-    modImplementation include(fabricApi.module("fabric-message-api-v1", "0.55.2+1.19"))
+    modImplementation include(fabricApi.module("fabric-api-base", "0.57.1+1.19.1"))
+    modImplementation include(fabricApi.module("fabric-lifecycle-events-v1", "0.57.1+1.19.1"))
+    modImplementation include(fabricApi.module("fabric-message-api-v1", "0.57.1+1.19.1"))
 
     implementation(transitiveInclude("net.dv8tion:JDA:5.0.0-alpha.9")) {
         exclude module: "opus-java"
