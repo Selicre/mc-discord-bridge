@@ -4,6 +4,7 @@ import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookClientBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.mojang.authlib.GameProfile;
+import com.mojang.brigadier.CommandDispatcher;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -30,6 +31,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WhitelistEntry;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
@@ -342,7 +344,8 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
         if (message.getContentRaw().startsWith("!run")) {
             String[] args = message.getContentRaw().split(" ", 2);
             if (args.length == 2) {
-                server.getCommandManager().execute(server.getCommandSource().withOutput(new DiscordCommandOutput(message)), args[1]);
+                final CommandDispatcher<ServerCommandSource> dispatcher = new CommandDispatcher<>();
+                server.getCommandManager().execute(dispatcher.parse(args[1], server.getCommandSource().withOutput(new DiscordCommandOutput(message))), args[1]);
             } else {
                 message.reply("Usage: !run <command to execute>").queue();
             }
@@ -385,15 +388,25 @@ class DiscordBotImpl extends ListenerAdapter implements DiscordBot {
     }
 
     @Override
-    public Text formatAndSendMessage(GameProfile author, Text message) {
+    public Text formatGameMessage(GameProfile author, Text message) {
         TextChannel chatChannel = discord.getTextChannelById(config.channelId);
         if (chatChannel == null) {
             return message;
         }
 
         GameMessageConverter.Results results = convertGameMessage(message, chatChannel, discord);
-        sendMessage(author, results.discordOutput);
         return results.gameOutput;
+    }
+
+    @Override
+    public void formatAndSendMessage(Text message) {
+        TextChannel chatChannel = discord.getTextChannelById(config.channelId);
+        if (chatChannel == null) {
+            return;
+        }
+
+        GameMessageConverter.Results results = convertGameMessage(message, chatChannel, discord);
+        sendMessage(Text.of(results.discordOutput));
     }
 
     @Override

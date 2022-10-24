@@ -43,7 +43,7 @@ public class DiscordBridgeMod implements ModInitializer {
 
         ServerMessageDecoratorEvent.EVENT.register(ServerMessageDecoratorEvent.STYLING_PHASE, (sender, message) -> {
             if (sender != null) {
-                Text messageText = DiscordBot.instance().formatAndSendMessage(sender.getGameProfile(), message);
+                Text messageText = DiscordBot.instance().formatGameMessage(sender.getGameProfile(), message);
                 return CompletableFuture.completedFuture(messageText);
             }
 

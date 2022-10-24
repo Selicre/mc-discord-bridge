@@ -32,7 +32,7 @@ abstract class ServerPlayerEntityMixin extends PlayerEntity {
     }
 
     @Inject(
-        method = "method_44706",
+        method = "acceptsChatMessage",
         at = @At("HEAD"), require = 1, cancellable = true)
     private void acceptsMessage(CallbackInfoReturnable<Boolean> ci) {
         if (DiscordBot.instance().isChatHidden(this)) {
@@ -40,7 +40,7 @@ abstract class ServerPlayerEntityMixin extends PlayerEntity {
         }
     }
     @Inject(
-        method = "method_44707",
+        method = "acceptsMessage",
         at = @At("HEAD"), require = 1, cancellable = true)
     private void acceptsMessage(boolean actionBar, CallbackInfoReturnable<Boolean> ci) {
         if (!actionBar && DiscordBot.instance().isChatHidden(this)) {
